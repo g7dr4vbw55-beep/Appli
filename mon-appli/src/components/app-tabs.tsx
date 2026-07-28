@@ -27,6 +27,21 @@ export default function AppTabs() {
           renderingMode="template"
         />
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="planning">
+        <NativeTabs.Trigger.Label>Planning</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="proposer">
+        <NativeTabs.Trigger.Label>Proposer</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="plus.circle" md="add_circle" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="demandes">
+        <NativeTabs.Trigger.Label>Demandes</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="tray.full" md="inbox" />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
