@@ -23,10 +23,10 @@ function ContenuGalerie({ prenom }: { prenom: string }) {
   const { elements, ajouterFichiers, relancer, retirer } = useUploadQueue(prenom, gererPhotoEnvoyee)
 
   return (
-    <div className="min-h-dvh bg-violet-950 pb-10">
+    <div className="min-h-dvh pb-10">
       <Entete prenom={prenom} />
 
-      <div className="mx-auto max-w-2xl px-4 py-4">
+      <div className="mx-auto max-w-2xl px-4 pb-5 pt-5">
         <BoutonAjoutPhotos onFichiers={ajouterFichiers} />
       </div>
 

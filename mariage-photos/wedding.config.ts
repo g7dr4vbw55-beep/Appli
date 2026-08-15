@@ -14,10 +14,10 @@ const weddingConfig = {
   shortName: 'Mariage 2026',
 
   /** Couleur principale de la PWA (thème de la barre de navigation mobile) */
-  themeColor: '#2a1f3d',
+  themeColor: '#1e0d22',
 
   /** Couleur de fond de l'écran de démarrage PWA */
-  backgroundColor: '#1a1425',
+  backgroundColor: '#150a18',
 } as const
 
 export default weddingConfig

@@ -15,6 +15,15 @@ export default function PhotoPleinEcran({ photo, prenom, onFermer }: Props) {
   const [envoi, setEnvoi] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
 
+  // Empêche la galerie de défiler derrière la vue plein écran.
+  useEffect(() => {
+    const precedent = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = precedent
+    }
+  }, [])
+
   useEffect(() => {
     let annule = false
     setChargement(true)
@@ -23,7 +32,7 @@ export default function PhotoPleinEcran({ photo, prenom, onFermer }: Props) {
         if (!annule) setCommentaires(c)
       })
       .catch(() => {
-        if (!annule) setErreur("Impossible de charger les commentaires.")
+        if (!annule) setErreur('Impossible de charger les commentaires.')
       })
       .finally(() => {
         if (!annule) setChargement(false)
@@ -51,63 +60,80 @@ export default function PhotoPleinEcran({ photo, prenom, onFermer }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-violet-950">
-      <div className="flex items-center justify-between border-b border-violet-800/60 px-4 py-3">
-        <p className="text-base font-semibold text-amber-100">Photo de {photo.auteur_prenom}</p>
+    <div className="fixed inset-0 z-50 flex flex-col bg-prune-950">
+      <div className="flex items-center justify-between gap-3 border-b border-prune-700/60 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-corail-500 text-base font-bold text-prune-950">
+            {photo.auteur_prenom.charAt(0).toUpperCase()}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-bold leading-tight text-creme">{photo.auteur_prenom}</p>
+            <p className="text-xs text-mauve-500">{formaterDate(photo.created_at)}</p>
+          </div>
+        </div>
         <button
           type="button"
           onClick={onFermer}
           aria-label="Fermer"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-800/70 text-xl text-amber-100"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-prune-800 text-2xl leading-none text-creme active:bg-prune-700"
         >
           ×
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
         <div className="flex items-center justify-center bg-black">
-          <img src={photo.url} alt={`Photo ajoutée par ${photo.auteur_prenom}`} className="max-h-[65vh] w-full object-contain" />
+          <img
+            src={photo.url}
+            alt={`Photo ajoutée par ${photo.auteur_prenom}`}
+            className="max-h-[62vh] w-full object-contain"
+          />
         </div>
 
-        <div className="px-4 py-4">
-          <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-violet-400">Commentaires</h2>
+        <div className="px-4 py-5">
+          <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-mauve-500">
+            {commentaires.length > 0 ? `${commentaires.length} commentaire${commentaires.length > 1 ? 's' : ''}` : 'Commentaires'}
+          </h2>
 
-          {chargement && <p className="text-sm text-violet-400">Chargement des commentaires…</p>}
+          {chargement && <p className="pulsation text-sm text-mauve-400">Chargement…</p>}
 
           {!chargement && commentaires.length === 0 && (
-            <p className="text-sm text-violet-400">Aucun commentaire. Soyez le premier à réagir !</p>
+            <p className="text-base text-mauve-400">Aucun commentaire pour l'instant. Lancez-vous !</p>
           )}
 
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-2.5">
             {commentaires.map((c) => (
-              <li key={c.id} className="rounded-xl bg-violet-900/50 px-3 py-2">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-bold text-amber-200">{c.auteur_prenom}</span>
-                  <span className="text-xs text-violet-400">{formaterDate(c.created_at)}</span>
+              <li key={c.id} className="apparition rounded-2xl bg-prune-850/80 px-4 py-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm font-bold text-rosee-300">{c.auteur_prenom}</span>
+                  <span className="shrink-0 text-xs text-mauve-500">{formaterDate(c.created_at)}</span>
                 </div>
-                <p className="mt-0.5 text-base text-violet-100">{c.contenu}</p>
+                <p className="mt-1 text-base leading-relaxed text-creme">{c.contenu}</p>
               </li>
             ))}
           </ul>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t border-violet-800/60 bg-violet-950 px-3 py-3">
-        {erreur && <p className="mb-2 text-sm font-medium text-rose-300">{erreur}</p>}
-        <div className="flex gap-2">
+      <form onSubmit={handleSubmit} className="border-t border-prune-700/60 bg-prune-950 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {erreur && <p className="mb-2 px-1 text-sm font-semibold text-corail-300">{erreur}</p>}
+        <div className="flex items-center gap-2">
           <input
             value={texte}
             onChange={(e) => setTexte(e.target.value)}
             placeholder="Écrire un commentaire…"
             maxLength={500}
-            className="min-w-0 flex-1 rounded-full border-2 border-violet-700 bg-violet-900/60 px-4 py-3 text-base text-amber-50 placeholder-violet-400 outline-none focus:border-amber-300"
+            className="min-w-0 flex-1 rounded-full border-2 border-prune-600 bg-prune-850/80 px-5 py-3.5 text-base text-creme placeholder-mauve-500 outline-none focus:border-corail-400"
           />
           <button
             type="submit"
             disabled={envoi || texte.trim().length === 0}
-            className="shrink-0 rounded-full bg-amber-400 px-5 py-3 font-bold text-violet-950 disabled:opacity-40"
+            aria-label="Envoyer le commentaire"
+            className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full bg-corail-500 text-prune-950 transition disabled:opacity-35 active:bg-corail-600"
           >
-            Envoyer
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
+              <path d="M2 21V14l15-2-15-2V3l21 9-21 9Z" fill="currentColor" />
+            </svg>
           </button>
         </div>
       </form>

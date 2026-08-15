@@ -9,8 +9,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.join(__dirname, '..', 'public', 'icons')
 mkdirSync(outDir, { recursive: true })
 
-const FOND = hexVersRgb('#2a1f3d')
-const COEUR = hexVersRgb('#d4a24c')
+const FOND = hexVersRgb('#1e0d22')
+const COEUR = hexVersRgb('#ff6f5c')
 
 function hexVersRgb(hex) {
   const n = parseInt(hex.slice(1), 16)

@@ -15,7 +15,7 @@ export default function BoutonAjoutPhotos({ onFichiers }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-3">
       <input
         ref={inputAppareil}
         type="file"
@@ -24,29 +24,26 @@ export default function BoutonAjoutPhotos({ onFichiers }: Props) {
         className="hidden"
         onChange={handleChange}
       />
-      <input
-        ref={inputPellicule}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={handleChange}
-      />
+      <input ref={inputPellicule} type="file" accept="image/*" multiple className="hidden" onChange={handleChange} />
+
+      {/* L'action principale occupe toute la largeur : c'est celle qu'un
+          invité doit trouver sans réfléchir, d'une main, en pleine soirée. */}
       <button
         type="button"
         onClick={() => inputAppareil.current?.click()}
-        className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-amber-400 py-4 text-violet-950 shadow-lg shadow-amber-900/30 active:scale-[0.98]"
+        className="flex w-full items-center justify-center gap-3 rounded-full bg-corail-500 px-6 py-5 text-prune-950 shadow-lg shadow-corail-600/30 transition active:scale-[0.98] active:bg-corail-600"
       >
         <IconeAppareilPhoto />
-        <span className="text-base font-bold">Prendre une photo</span>
+        <span className="text-xl font-bold">Prendre une photo</span>
       </button>
+
       <button
         type="button"
         onClick={() => inputPellicule.current?.click()}
-        className="flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-amber-400 bg-violet-900/60 py-4 text-amber-100 active:scale-[0.98]"
+        className="flex w-full items-center justify-center gap-3 rounded-full border-2 border-prune-600 bg-prune-850/70 px-6 py-4 text-rosee-300 transition active:scale-[0.98] active:bg-prune-800"
       >
         <IconeGalerie />
-        <span className="text-base font-bold">Depuis la pellicule</span>
+        <span className="text-lg font-bold">Choisir dans mes photos</span>
       </button>
     </div>
   )
@@ -54,7 +51,7 @@ export default function BoutonAjoutPhotos({ onFichiers }: Props) {
 
 function IconeAppareilPhoto() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" className="h-7 w-7">
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2.2} stroke="currentColor" className="h-7 w-7">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -67,10 +64,10 @@ function IconeAppareilPhoto() {
 
 function IconeGalerie() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" className="h-7 w-7">
-      <rect x="3" y="4" width="18" height="16" rx="2" />
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2.2} stroke="currentColor" className="h-6 w-6">
+      <rect x="3" y="4" width="18" height="16" rx="3" />
       <path strokeLinecap="round" strokeLinejoin="round" d="m3 16 5-5 4 4 3-3 6 6" />
-      <circle cx="8" cy="9" r="1.5" />
+      <circle cx="8.5" cy="9" r="1.4" />
     </svg>
   )
 }

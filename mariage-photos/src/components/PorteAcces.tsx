@@ -45,9 +45,15 @@ function EcranCodeAcces({ onValide }: { onValide: () => void }) {
 
   return (
     <EcranCentre>
-      <h1 className="text-3xl font-bold text-center text-amber-100">{weddingConfig.eventTitle}</h1>
-      <p className="mt-3 text-center text-lg text-violet-200">Entrez le code affiché sur votre table pour accéder aux photos.</p>
-      <form onSubmit={handleSubmit} className="mt-8 w-full max-w-sm">
+      <Coeur />
+      <h1 className="mt-6 text-center text-[2rem] font-bold leading-tight text-creme">
+        {weddingConfig.eventTitle}
+      </h1>
+      <p className="mt-4 max-w-xs text-center text-lg leading-relaxed text-mauve-300">
+        Entrez le code affiché sur votre table pour rejoindre l'album.
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-9 w-full max-w-sm">
         <label htmlFor="code-acces" className="sr-only">
           Code d'accès
         </label>
@@ -63,19 +69,14 @@ function EcranCodeAcces({ onValide }: { onValide: () => void }) {
             setErreur(false)
           }}
           placeholder="Code d'accès"
-          className="w-full rounded-2xl border-2 border-violet-400/40 bg-violet-950/60 px-5 py-4 text-center text-2xl tracking-widest text-amber-50 placeholder-violet-400 outline-none focus:border-amber-300"
+          className={champClasses(erreur)}
         />
         {erreur && (
-          <p className="mt-3 text-center text-base font-medium text-rose-300">
-            Ce code n'est pas correct. Vérifiez sur la carte posée sur votre table.
+          <p className="mt-3 text-center text-base font-semibold text-corail-300">
+            Ce code n'est pas le bon. Vérifiez la carte posée sur votre table.
           </p>
         )}
-        <button
-          type="submit"
-          className="mt-6 w-full rounded-2xl bg-amber-400 px-6 py-4 text-xl font-bold text-violet-950 shadow-lg shadow-amber-900/30 active:scale-[0.98]"
-        >
-          Valider
-        </button>
+        <BoutonPrincipal>Valider</BoutonPrincipal>
       </form>
     </EcranCentre>
   )
@@ -98,9 +99,13 @@ function EcranPrenom({ onValide }: { onValide: (prenom: string) => void }) {
 
   return (
     <EcranCentre>
-      <h1 className="text-3xl font-bold text-center text-amber-100">Bienvenue !</h1>
-      <p className="mt-3 text-center text-lg text-violet-200">{weddingConfig.welcomeMessage}</p>
-      <form onSubmit={handleSubmit} className="mt-8 w-full max-w-sm">
+      <Coeur />
+      <h1 className="mt-6 text-center text-[2rem] font-bold leading-tight text-creme">Bienvenue !</h1>
+      <p className="mt-4 max-w-xs text-center text-lg leading-relaxed text-mauve-300">
+        {weddingConfig.welcomeMessage}
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-9 w-full max-w-sm">
         <label htmlFor="prenom" className="sr-only">
           Votre prénom
         </label>
@@ -114,25 +119,59 @@ function EcranPrenom({ onValide }: { onValide: (prenom: string) => void }) {
             setErreur(false)
           }}
           placeholder="Votre prénom"
-          className="w-full rounded-2xl border-2 border-violet-400/40 bg-violet-950/60 px-5 py-4 text-center text-2xl text-amber-50 placeholder-violet-400 outline-none focus:border-amber-300"
+          className={champClasses(erreur)}
         />
-        {erreur && <p className="mt-3 text-center text-base font-medium text-rose-300">Entrez au moins 2 lettres.</p>}
-        <button
-          type="submit"
-          className="mt-6 w-full rounded-2xl bg-amber-400 px-6 py-4 text-xl font-bold text-violet-950 shadow-lg shadow-amber-900/30 active:scale-[0.98]"
-        >
-          C'est parti
-        </button>
-        <p className="mt-4 text-center text-sm text-violet-400">
-          Votre prénom sera affiché à côté de vos photos et commentaires.
+        {erreur && (
+          <p className="mt-3 text-center text-base font-semibold text-corail-300">
+            Entrez au moins 2 lettres.
+          </p>
+        )}
+        <BoutonPrincipal>C'est parti</BoutonPrincipal>
+        <p className="mt-5 text-center text-sm leading-relaxed text-mauve-500">
+          Votre prénom apparaîtra à côté de vos photos et de vos commentaires.
         </p>
       </form>
     </EcranCentre>
   )
 }
 
+function champClasses(erreur: boolean): string {
+  return [
+    'w-full rounded-full border-2 bg-prune-850/80 px-6 py-4 text-center text-xl',
+    'text-creme placeholder-mauve-500 outline-none transition-colors',
+    erreur ? 'border-corail-500' : 'border-prune-600 focus:border-corail-400',
+  ].join(' ')
+}
+
+function BoutonPrincipal({ children }: { children: ReactNode }) {
+  return (
+    <button
+      type="submit"
+      className="mt-6 w-full rounded-full bg-corail-500 px-6 py-5 text-xl font-bold text-prune-950 shadow-lg shadow-corail-600/30 transition active:scale-[0.97] active:bg-corail-600"
+    >
+      {children}
+    </button>
+  )
+}
+
+/** Petit cœur décoratif, dessiné en SVG pour ne rien charger sur le réseau. */
+function Coeur() {
+  return (
+    <svg viewBox="0 0 32 30" aria-hidden="true" className="h-14 w-14 drop-shadow-lg">
+      <path
+        d="M16 29S1 19.5 1 10.2A8.2 8.2 0 0 1 16 5.6 8.2 8.2 0 0 1 31 10.2C31 19.5 16 29 16 29Z"
+        fill="var(--color-corail-500)"
+      />
+      <path
+        d="M16 29S1 19.5 1 10.2A8.2 8.2 0 0 1 16 5.6"
+        fill="var(--color-rosee-400)"
+      />
+    </svg>
+  )
+}
+
 function EcranCentre({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-violet-950 px-6 py-12">{children}</div>
+    <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-12">{children}</div>
   )
 }

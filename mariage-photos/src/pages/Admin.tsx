@@ -56,9 +56,9 @@ function EcranConnexion({ onConnecte }: { onConnecte: (mdp: string) => void }) {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-violet-950 px-6">
-      <h1 className="text-2xl font-bold text-amber-100">Administration</h1>
-      <p className="mt-1 text-violet-300">{weddingConfig.eventTitle}</p>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-prune-950 px-6">
+      <h1 className="text-2xl font-bold text-creme">Administration</h1>
+      <p className="mt-1 text-mauve-300">{weddingConfig.eventTitle}</p>
       <form onSubmit={handleSubmit} className="mt-8 w-full max-w-sm">
         <input
           type="password"
@@ -66,13 +66,13 @@ function EcranConnexion({ onConnecte }: { onConnecte: (mdp: string) => void }) {
           value={saisie}
           onChange={(e) => setSaisie(e.target.value)}
           placeholder="Mot de passe administrateur"
-          className="w-full rounded-2xl border-2 border-violet-400/40 bg-violet-950/60 px-5 py-4 text-center text-lg text-amber-50 placeholder-violet-400 outline-none focus:border-amber-300"
+          className="w-full rounded-2xl border-2 border-prune-600 bg-prune-950/60 px-5 py-4 text-center text-lg text-creme placeholder-mauve-500 outline-none focus:border-corail-400"
         />
-        {erreur && <p className="mt-3 text-center text-sm font-medium text-rose-300">{erreur}</p>}
+        {erreur && <p className="mt-3 text-center text-sm font-medium text-corail-300">{erreur}</p>}
         <button
           type="submit"
           disabled={verification || saisie.length === 0}
-          className="mt-6 w-full rounded-2xl bg-amber-400 px-6 py-4 text-lg font-bold text-violet-950 disabled:opacity-40"
+          className="mt-6 w-full rounded-2xl bg-corail-500 px-6 py-4 text-lg font-bold text-prune-950 disabled:opacity-40"
         >
           {verification ? 'Vérification…' : 'Entrer'}
         </button>
@@ -140,13 +140,13 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
   }
 
   return (
-    <div className="min-h-dvh bg-violet-950 pb-16">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-violet-800/60 bg-violet-950/95 px-4 py-3 backdrop-blur">
+    <div className="min-h-dvh bg-prune-950 pb-16">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-prune-700/60 bg-prune-950/95 px-4 py-3 backdrop-blur">
         <div>
-          <h1 className="text-lg font-bold text-amber-100">Administration</h1>
-          <p className="text-sm text-violet-300">{photos.length} photo(s) chargée(s)</p>
+          <h1 className="text-lg font-bold text-creme">Administration</h1>
+          <p className="text-sm text-mauve-300">{photos.length} photo(s) chargée(s)</p>
         </div>
-        <button type="button" onClick={handleDeconnexion} className="text-sm text-violet-400 underline">
+        <button type="button" onClick={handleDeconnexion} className="text-sm text-mauve-400 underline">
           Se déconnecter
         </button>
       </header>
@@ -156,7 +156,7 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
           type="button"
           onClick={handleExport}
           disabled={exportEnCours}
-          className="w-full rounded-2xl bg-amber-400 px-6 py-4 text-lg font-bold text-violet-950 disabled:opacity-40"
+          className="w-full rounded-2xl bg-corail-500 px-6 py-4 text-lg font-bold text-prune-950 disabled:opacity-40"
         >
           {exportEnCours ? 'Préparation de l\'archive…' : 'Télécharger toutes les photos (.zip)'}
         </button>
@@ -164,12 +164,12 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
 
       {messageErreur && (
         <div className="mx-auto mb-4 max-w-2xl px-4">
-          <div className="rounded-xl border border-rose-500/60 bg-rose-950/60 px-4 py-3">
-            <p className="text-sm font-semibold text-rose-200">{messageErreur}</p>
+          <div className="rounded-xl border border-corail-500/70 bg-corail-600/15 px-4 py-3">
+            <p className="text-sm font-semibold text-corail-300">{messageErreur}</p>
             <button
               type="button"
               onClick={() => setMessageErreur(null)}
-              className="mt-2 text-sm text-rose-300 underline"
+              className="mt-2 text-sm text-corail-300 underline"
             >
               Masquer
             </button>
@@ -182,7 +182,7 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
           ouvrait la photo au lieu de la supprimer. */}
       <div className="mx-auto grid max-w-2xl grid-cols-2 gap-3 px-4 sm:grid-cols-3">
         {photos.map((photo) => (
-          <div key={photo.id} className="overflow-hidden rounded-xl bg-violet-900">
+          <div key={photo.id} className="overflow-hidden rounded-xl bg-prune-800">
             <button
               type="button"
               onClick={() => setPhotoOuverte(photo)}
@@ -207,7 +207,7 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
             type="button"
             onClick={() => void chargerPlus()}
             disabled={chargement}
-            className="rounded-xl border border-violet-700 px-5 py-2 text-sm text-amber-100"
+            className="rounded-xl border border-prune-600 px-5 py-2 text-sm text-creme"
           >
             {chargement ? 'Chargement…' : 'Charger plus de photos'}
           </button>
@@ -256,36 +256,36 @@ function PanneauCommentaires({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-violet-950">
-      <div className="flex items-center justify-between border-b border-violet-800/60 px-4 py-3">
-        <p className="font-semibold text-amber-100">Photo de {photo.auteur_prenom}</p>
+    <div className="fixed inset-0 z-50 flex flex-col bg-prune-950">
+      <div className="flex items-center justify-between border-b border-prune-700/60 px-4 py-3">
+        <p className="font-semibold text-creme">Photo de {photo.auteur_prenom}</p>
         <button
           type="button"
           onClick={onFermer}
           aria-label="Fermer"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-800/70 text-xl text-amber-100"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-prune-800 text-xl text-creme"
         >
           ×
         </button>
       </div>
       <img src={photo.url} alt="" className="max-h-[45vh] w-full bg-black object-contain" />
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-violet-400">Commentaires</h2>
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-mauve-400">Commentaires</h2>
         {messageErreur && (
-          <p className="mb-3 rounded-xl border border-rose-500/60 bg-rose-950/60 px-3 py-2 text-sm font-semibold text-rose-200">
+          <p className="mb-3 rounded-xl border border-corail-500/70 bg-corail-600/15 px-3 py-2 text-sm font-semibold text-corail-300">
             {messageErreur}
           </p>
         )}
-        {chargement && <p className="text-sm text-violet-400">Chargement…</p>}
+        {chargement && <p className="text-sm text-mauve-400">Chargement…</p>}
         {!chargement && commentaires.length === 0 && (
-          <p className="text-sm text-violet-400">Aucun commentaire sur cette photo.</p>
+          <p className="text-sm text-mauve-400">Aucun commentaire sur cette photo.</p>
         )}
         <ul className="flex flex-col gap-2">
           {commentaires.map((c) => (
-            <li key={c.id} className="flex items-start justify-between gap-3 rounded-xl bg-violet-900/50 px-3 py-2">
+            <li key={c.id} className="flex items-start justify-between gap-3 rounded-xl bg-prune-850/80 px-3 py-2">
               <div>
-                <span className="text-sm font-bold text-amber-200">{c.auteur_prenom}</span>
-                <p className="text-base text-violet-100">{c.contenu}</p>
+                <span className="text-sm font-bold text-rosee-300">{c.auteur_prenom}</span>
+                <p className="text-base text-creme">{c.contenu}</p>
               </div>
               <button
                 type="button"
