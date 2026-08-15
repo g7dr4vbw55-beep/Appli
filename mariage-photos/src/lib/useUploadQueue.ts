@@ -98,10 +98,17 @@ function televerserAvecProgression(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${cheminStockage}`
+    const cle = import.meta.env.VITE_SUPABASE_ANON_KEY
     const xhr = new XMLHttpRequest()
     xhr.open('POST', url, true)
-    xhr.setRequestHeader('apikey', import.meta.env.VITE_SUPABASE_ANON_KEY)
-    xhr.setRequestHeader('Authorization', `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`)
+    // On envoie volontairement la même clé dans "apikey" et dans "Authorization",
+    // exactement comme le fait supabase-js. C'est indispensable pour les anciennes
+    // clés "anon" (des JWT), et cela reste accepté pour les nouvelles clés
+    // "publishable" tant que les deux en-têtes portent la même valeur.
+    // Ne dissociez pas ces deux lignes : l'envoi des photos cesserait de
+    // fonctionner avec l'un ou l'autre des deux types de clés.
+    xhr.setRequestHeader('apikey', cle)
+    xhr.setRequestHeader('Authorization', `Bearer ${cle}`)
     xhr.setRequestHeader('Content-Type', fichier.type || 'image/jpeg')
     xhr.setRequestHeader('x-upsert', 'false')
     xhr.upload.onprogress = (e) => {

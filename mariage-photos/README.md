@@ -31,11 +31,20 @@ Supabase héberge la base de données et le stockage des photos.
 
 ## Étape 2 — Récupérer les clés du projet
 
-1. Dans votre projet Supabase, allez dans **Project Settings** (icône d'engrenage en bas à gauche) puis **API**.
+1. Dans votre projet Supabase, allez dans **Project Settings** (icône d'engrenage en bas à gauche) puis **API Keys**.
 2. Notez ces trois valeurs, vous en aurez besoin plus tard :
-   - **Project URL** (ressemble à `https://xxxxxxxxxxxx.supabase.co`)
-   - **anon public** (une longue chaîne de caractères, sous "Project API keys")
-   - **service_role** (une autre longue chaîne, plus bas dans la même page — cliquez sur "Reveal" pour l'afficher). **Ne partagez jamais cette clé et ne la mettez jamais dans du code visible du navigateur.**
+
+   | À copier dans Supabase | Ressemble à | Variable correspondante |
+   |---|---|---|
+   | **Project URL** (onglet "Data API" ou "General") | `https://xxxxxxxxxxxx.supabase.co` | `VITE_SUPABASE_URL` |
+   | **Publishable key** | `sb_publishable_...` | `VITE_SUPABASE_ANON_KEY` |
+   | **Secret key (default)** | `sb_secret_...` | `SUPABASE_SERVICE_ROLE_KEY` |
+
+   La clé secrète donne un accès total à votre base : **ne la partagez jamais et ne la collez jamais dans une variable commençant par `VITE_`**, sinon elle deviendrait visible par tous les visiteurs du site.
+
+   **Si vous voyez aussi des clés marquées "LEGACY"** (nommées "anonymous API key" et "service API key") : ce sont les anciennes clés, en cours de retrait chez Supabase. Ignorez-les et utilisez bien les deux du tableau ci-dessus.
+
+   Les noms de nos variables (`..._ANON_KEY`, `..._SERVICE_ROLE_KEY`) reprennent l'ancienne terminologie de Supabase, mais ce sont bien les nouvelles clés qu'il faut y coller. L'application fonctionne avec les deux générations de clés.
 
 ## Étape 3 — Exécuter le script SQL
 
