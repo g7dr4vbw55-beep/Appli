@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import weddingConfig from '../../wedding.config'
 import { chargerCommentaires, chargerPagePhotos } from '../lib/api'
+import { intituleDefi } from '../../defis.config'
 import {
   effacerMotDePasseSession,
   getMotDePasseSession,
@@ -190,6 +191,14 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
             >
               <img src={photo.url} alt="" className="h-full w-full object-cover" />
             </button>
+            {/* Auteur et défi rappelés sous la vignette : la suppression est
+                définitive, autant savoir exactement ce qu'on efface. */}
+            <div className="px-2.5 py-2">
+              <p className="truncate text-sm font-semibold text-creme">{photo.auteur_prenom}</p>
+              <p className="truncate text-xs text-rosee-300">
+                {intituleDefi(photo.defi) ?? 'Photo libre'}
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => void handleSupprimerPhoto(photo)}
@@ -258,7 +267,12 @@ function PanneauCommentaires({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-prune-950">
       <div className="flex items-center justify-between border-b border-prune-700/60 px-4 py-3">
-        <p className="font-semibold text-creme">Photo de {photo.auteur_prenom}</p>
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-creme">Photo de {photo.auteur_prenom}</p>
+          {photo.defi && (
+            <p className="truncate text-xs text-rosee-300">{intituleDefi(photo.defi) ?? photo.defi}</p>
+          )}
+        </div>
         <button
           type="button"
           onClick={onFermer}

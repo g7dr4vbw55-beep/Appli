@@ -5,6 +5,7 @@ import BoutonAjoutPhotos from '../components/BoutonAjoutPhotos'
 import FileEnvoi from '../components/FileEnvoi'
 import Galerie from '../components/Galerie'
 import Defis from '../components/Defis'
+import PresentationJeu from '../components/PresentationJeu'
 import PhotoPleinEcran from '../components/PhotoPleinEcran'
 import { useUploadQueue } from '../lib/useUploadQueue'
 import { getDefisAccomplis } from '../lib/localPrefs'
@@ -22,6 +23,9 @@ function ContenuGalerie({ prenom }: { prenom: string }) {
   const [photosRecentes, setPhotosRecentes] = useState<PhotoAvecUrl[]>([])
   const [photoOuverte, setPhotoOuverte] = useState<PhotoAvecUrl | null>(null)
   const [filtreDefi, setFiltreDefi] = useState<string | null>(null)
+  // Non mémorisé volontairement : la présentation réapparaît à chaque
+  // ouverture de la page, pour qu'aucun invité ne passe à côté du jeu.
+  const [presentationVisible, setPresentationVisible] = useState(true)
   // Incrémenté après chaque envoi réussi pour que l'onglet Défis relise les
   // défis accomplis, qui vivent dans le stockage local.
   const [versionAccomplis, setVersionAccomplis] = useState(0)
@@ -38,7 +42,7 @@ function ContenuGalerie({ prenom }: { prenom: string }) {
 
   return (
     <div className="min-h-dvh pb-10">
-      <Entete prenom={prenom} />
+      <Entete prenom={prenom} onAide={() => setPresentationVisible(true)} />
 
       <Onglets
         actif={onglet}
@@ -82,6 +86,8 @@ function ContenuGalerie({ prenom }: { prenom: string }) {
       {photoOuverte && (
         <PhotoPleinEcran photo={photoOuverte} prenom={prenom} onFermer={() => setPhotoOuverte(null)} />
       )}
+
+      {presentationVisible && <PresentationJeu onFermer={() => setPresentationVisible(false)} />}
     </div>
   )
 }
