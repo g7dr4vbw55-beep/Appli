@@ -89,11 +89,36 @@ create policy "Ajout public de commentaires"
   with check (true);
 
 -- =========================================================================
+-- BUCKET DE STOCKAGE
+--
+-- Crée le bucket "photos" directement, ce qui évite d'avoir à le créer à la
+-- main dans l'interface (pratique depuis un téléphone). Si vous l'avez déjà
+-- créé, cette instruction ne fait rien et n'écrase pas vos réglages.
+--
+--   public = true          : les photos s'affichent dans la galerie sans
+--                            authentification, comme le fait l'application.
+--   file_size_limit        : 10 Mo par fichier. L'application compresse déjà
+--                            à environ 500 Ko ; cette limite est un garde-fou
+--                            contre un envoi anormalement gros.
+--   allowed_mime_types     : seules des images peuvent être déposées.
+-- =========================================================================
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'photos',
+  'photos',
+  true,
+  10485760,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+)
+on conflict (id) do nothing;
+
+-- =========================================================================
 -- ROW LEVEL SECURITY — STOCKAGE (storage.objects)
 --
--- À exécuter APRÈS avoir créé le bucket "photos" (voir le README, section
--- "Créer le bucket de stockage"). Même principe : lecture et dépôt publics,
--- pas de suppression possible avec la clé publique (anon).
+-- Même principe que pour les tables : lecture et dépôt publics, mais aucune
+-- politique de suppression pour les rôles publics. Un invité ne peut donc
+-- pas effacer les photos des autres depuis son navigateur.
 -- =========================================================================
 
 create policy "Lecture publique du bucket photos"

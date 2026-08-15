@@ -49,20 +49,28 @@ Supabase héberge la base de données et le stockage des photos.
 ## Étape 3 — Exécuter le script SQL
 
 1. Toujours dans Supabase, allez dans **SQL Editor** (menu de gauche) puis cliquez sur **New query**.
+
+   *Vous ne trouvez pas le menu ?* Sur téléphone, le menu latéral est replié. Ouvrez la recherche (icône loupe) et tapez `SQL` : le raccourci apparaît. L'icône **☰** déplie le menu complet.
+
 2. Ouvrez le fichier [`supabase/schema.sql`](./supabase/schema.sql) de ce projet, copiez tout son contenu, et collez-le dans l'éditeur SQL de Supabase.
-3. Cliquez sur **Run** (ou Ctrl/Cmd + Entrée). Vous devriez voir un message de succès. Cela crée les tables `photos` et `commentaires`, ainsi que les règles de sécurité (RLS) qui autorisent la lecture et l'ajout par tout le monde, mais **interdisent la suppression et la modification** depuis le navigateur — seule la page d'administration (via une clé secrète côté serveur) peut supprimer.
+3. Cliquez sur **Run** (ou Ctrl/Cmd + Entrée). Vous devriez voir un message de succès.
 
-## Étape 4 — Créer le bucket de stockage
+Ce script fait tout d'un coup :
 
-C'est l'endroit où les photos elles-mêmes seront stockées (la base de données ne contient que leurs informations).
+- il crée les tables `photos` et `commentaires` ;
+- il crée le **bucket de stockage `photos`**, en public, avec une limite de 10 Mo par fichier — vous n'avez donc rien à créer à la main dans la section Storage ;
+- il met en place les règles de sécurité (RLS) qui autorisent la lecture et l'ajout par tout le monde, mais **interdisent la suppression et la modification** depuis le navigateur. Seule la page d'administration, via une clé secrète qui ne quitte jamais le serveur, peut supprimer.
 
-1. Dans le menu de gauche, cliquez sur **Storage**.
-2. Cliquez sur **New bucket**.
-3. Donnez-lui le nom **`photos`** (exactement ce nom, en minuscules — sinon vous devrez adapter la variable `VITE_SUPABASE_BUCKET` plus tard).
-4. Activez l'option **Public bucket** (interrupteur "Public bucket" sur ON). C'est nécessaire pour que les photos s'affichent dans la galerie sans configuration supplémentaire.
-5. Cliquez sur **Create bucket**.
+Le script peut être relancé sans risque : s'il est exécuté deux fois, il ne recrée pas ce qui existe déjà.
 
-Les politiques de sécurité du bucket (qui autorisent le dépôt et la lecture publics, mais pas la suppression) ont déjà été créées à l'étape 3 par le script SQL.
+## Étape 4 — Vérifier le bucket de stockage
+
+Cette étape est une simple vérification : le bucket a normalement été créé par le script.
+
+1. Allez dans **Storage** (via la recherche en tapant `storage` si le menu est replié).
+2. Vous devriez voir un bucket nommé **`photos`**, marqué **Public**.
+
+Si vous ne le voyez pas, créez-le à la main avec **New bucket** : nom `photos` en minuscules, et l'interrupteur **Public bucket** activé.
 
 ---
 
