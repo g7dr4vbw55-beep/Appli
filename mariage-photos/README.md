@@ -175,9 +175,23 @@ Elle est affichée à la fin du déploiement, et aussi visible depuis le tableau
 ## Étape 8 — Générer l'affiche avec le QR code
 
 1. Ouvrez `https://votre-url-vercel.vercel.app/affiche` dans un navigateur.
-2. Le QR code affiché pointe **automatiquement** vers l'adresse de votre site (aucune configuration nécessaire).
+2. Vérifiez l'**adresse affichée dans le champ** en haut de la page : c'est elle qui sera encodée dans le QR code. Elle est pré-remplie avec l'adresse courante, et vous pouvez la remplacer.
+
+   **Utilisez l'adresse de production**, celle sans code au milieu (`appli-soso18.vercel.app`), et **jamais une adresse de déploiement** (`appli-m6mtp8i9w-soso18.vercel.app`). Vous trouverez la bonne dans Vercel, rubrique **Domains** de votre projet. Les adresses de déploiement changent à chaque mise à jour et sont protégées par une connexion Vercel : vos invités tomberaient sur un écran de login. La page vous avertit si elle en détecte une.
 3. Cliquez sur le bouton **Imprimer**, puis dans la fenêtre d'impression, choisissez le format papier **A5** (ou imprimez en A4 et découpez/pliez en deux).
 4. Imprimez une affiche par table (environ 8 à 10 exemplaires pour 75 invités selon le nombre de tables).
+
+### Test indispensable avant d'imprimer
+
+Scannez le QR code avec **un téléphone qui n'est pas connecté à votre compte Vercel** (celui d'un proche, ou le vôtre en navigation privée). Vous devez voir l'écran « Entrez le code affiché sur votre table ».
+
+Si vous voyez au contraire une page Vercel demandant de se connecter, la protection des déploiements est active sur votre site. Corrigez-la ainsi :
+
+1. Vercel > votre projet > **Settings** > **Deployment Protection**.
+2. Passez **Vercel Authentication** sur **Disabled** (ou sur *Standard Protection*, qui laisse la production accessible et ne protège que les déploiements de test).
+3. Enregistrez, puis refaites le test avec un téléphone non connecté.
+
+C'est le point le plus important à valider avant le jour J : tant que cette protection s'applique à la production, aucun invité ne peut ouvrir le site, quelle que soit la qualité du reste.
 
 ---
 
