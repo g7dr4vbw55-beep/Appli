@@ -4,7 +4,7 @@
  */
 const weddingConfig = {
   /** Titre affiché sur l'écran d'accueil et dans le titre de l'onglet du navigateur */
-  eventTitle: 'Sofiane & Morgane, 22 août 2026',
+  eventTitle: 'Mariage de Sofiane & Morgane 22 août 2026 💕',
 
   /** Petite phrase d'accueil affichée sous le titre */
   welcomeMessage:
