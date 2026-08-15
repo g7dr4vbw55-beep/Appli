@@ -81,19 +81,39 @@ export async function verifierMotDePasse(motDePasse: string): Promise<ResultatCo
   }
 }
 
+/**
+ * Reconstruit un message exploitable à partir de la réponse du serveur.
+ * Sans cela, toutes les pannes se ressemblaient ("échec, réessayez") et il
+ * était impossible de savoir s'il fallait corriger une variable, une clé
+ * ou autre chose.
+ */
+async function lireErreur(reponse: Response, action: string): Promise<Error> {
+  const texte = await reponse.text().catch(() => '')
+  let message = ''
+  try {
+    message = (JSON.parse(texte) as { erreur?: string }).erreur ?? ''
+  } catch {
+    message = ''
+  }
+  if (reponse.status === 401) {
+    return new Error('Votre session a expiré. Reconnectez-vous avec le mot de passe administrateur.')
+  }
+  return new Error(message || `${action} (code ${reponse.status}).`)
+}
+
 export async function supprimerPhoto(id: string, motDePasse: string): Promise<void> {
   const reponse = await appelAdmin('/api/admin/delete-photo', motDePasse, { id })
-  if (!reponse.ok) throw new Error('Échec de la suppression de la photo.')
+  if (!reponse.ok) throw await lireErreur(reponse, 'Suppression de la photo impossible')
 }
 
 export async function supprimerCommentaire(id: string, motDePasse: string): Promise<void> {
   const reponse = await appelAdmin('/api/admin/delete-comment', motDePasse, { id })
-  if (!reponse.ok) throw new Error('Échec de la suppression du commentaire.')
+  if (!reponse.ok) throw await lireErreur(reponse, 'Suppression du commentaire impossible')
 }
 
 export async function telechargerArchiveZip(motDePasse: string): Promise<void> {
   const reponse = await appelAdmin('/api/admin/export-zip', motDePasse)
-  if (!reponse.ok) throw new Error("Échec de la création de l'archive.")
+  if (!reponse.ok) throw await lireErreur(reponse, "Création de l'archive impossible")
 
   const blob = await reponse.blob()
   const url = URL.createObjectURL(blob)

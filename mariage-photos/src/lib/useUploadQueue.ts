@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { compresserPhoto } from './compressImage'
-import { supabase, BUCKET_NAME, urlPublique } from './supabase'
+import { supabase, BUCKET_NAME, urlPublique, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase'
 import type { Photo, PhotoAvecUrl } from './types'
 
 export type StatutEnvoi = 'compression' | 'envoi' | 'termine' | 'erreur'
@@ -97,8 +97,8 @@ function televerserAvecProgression(
   onProgress: (pct: number) => void,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${cheminStockage}`
-    const cle = import.meta.env.VITE_SUPABASE_ANON_KEY
+    const url = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${cheminStockage}`
+    const cle = SUPABASE_ANON_KEY
     const xhr = new XMLHttpRequest()
     xhr.open('POST', url, true)
     // On envoie volontairement la même clé dans "apikey" et dans "Authorization",

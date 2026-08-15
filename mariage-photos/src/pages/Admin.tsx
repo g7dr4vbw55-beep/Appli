@@ -87,7 +87,7 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
   const [fini, setFini] = useState(false)
   const [photoOuverte, setPhotoOuverte] = useState<PhotoAvecUrl | null>(null)
   const [exportEnCours, setExportEnCours] = useState(false)
-  const [messageExport, setMessageExport] = useState<string | null>(null)
+  const [messageErreur, setMessageErreur] = useState<string | null>(null)
 
   const chargerPlus = useCallback(async () => {
     setChargement(true)
@@ -112,24 +112,23 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
 
   async function handleSupprimerPhoto(photo: PhotoAvecUrl) {
     if (!confirm(`Supprimer définitivement la photo de ${photo.auteur_prenom} ?`)) return
+    setMessageErreur(null)
     try {
       await supprimerPhoto(photo.id, motDePasse)
       setPhotos((prev) => prev.filter((p) => p.id !== photo.id))
       if (photoOuverte?.id === photo.id) setPhotoOuverte(null)
-    } catch {
-      alert('La suppression a échoué. Réessayez.')
+    } catch (err) {
+      setMessageErreur(err instanceof Error ? err.message : 'La suppression a échoué.')
     }
   }
 
   async function handleExport() {
     setExportEnCours(true)
-    setMessageExport(null)
+    setMessageErreur(null)
     try {
       await telechargerArchiveZip(motDePasse)
-    } catch {
-      setMessageExport(
-        "L'archive n'a pas pu être créée (peut-être trop de photos pour un seul export). Réessayez dans un instant.",
-      )
+    } catch (err) {
+      setMessageErreur(err instanceof Error ? err.message : "L'archive n'a pas pu être créée.")
     } finally {
       setExportEnCours(false)
     }
@@ -161,22 +160,42 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
         >
           {exportEnCours ? 'Préparation de l\'archive…' : 'Télécharger toutes les photos (.zip)'}
         </button>
-        {messageExport && <p className="mt-2 text-center text-sm text-rose-300">{messageExport}</p>}
       </div>
 
-      <div className="mx-auto grid max-w-2xl grid-cols-3 gap-1 px-1">
+      {messageErreur && (
+        <div className="mx-auto mb-4 max-w-2xl px-4">
+          <div className="rounded-xl border border-rose-500/60 bg-rose-950/60 px-4 py-3">
+            <p className="text-sm font-semibold text-rose-200">{messageErreur}</p>
+            <button
+              type="button"
+              onClick={() => setMessageErreur(null)}
+              className="mt-2 text-sm text-rose-300 underline"
+            >
+              Masquer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Deux zones tactiles distinctes et généreuses : une croix de 28 px
+          superposée à la photo était trop petite au doigt, et un appui à côté
+          ouvrait la photo au lieu de la supprimer. */}
+      <div className="mx-auto grid max-w-2xl grid-cols-2 gap-3 px-4 sm:grid-cols-3">
         {photos.map((photo) => (
-          <div key={photo.id} className="relative aspect-square overflow-hidden bg-violet-900">
-            <button type="button" onClick={() => setPhotoOuverte(photo)} className="h-full w-full">
+          <div key={photo.id} className="overflow-hidden rounded-xl bg-violet-900">
+            <button
+              type="button"
+              onClick={() => setPhotoOuverte(photo)}
+              className="block aspect-square w-full"
+            >
               <img src={photo.url} alt="" className="h-full w-full object-cover" />
             </button>
             <button
               type="button"
               onClick={() => void handleSupprimerPhoto(photo)}
-              aria-label="Supprimer la photo"
-              className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-600 text-sm font-bold text-white"
+              className="w-full bg-rose-600 py-3 text-base font-bold text-white active:bg-rose-700"
             >
-              ×
+              Supprimer
             </button>
           </div>
         ))}
@@ -217,6 +236,7 @@ function PanneauCommentaires({
 }) {
   const [commentaires, setCommentaires] = useState<Commentaire[]>([])
   const [chargement, setChargement] = useState(true)
+  const [messageErreur, setMessageErreur] = useState<string | null>(null)
 
   useEffect(() => {
     chargerCommentaires(photo.id)
@@ -226,11 +246,12 @@ function PanneauCommentaires({
 
   async function handleSupprimer(id: string) {
     if (!confirm('Supprimer ce commentaire ?')) return
+    setMessageErreur(null)
     try {
       await supprimerCommentaire(id, motDePasse)
       setCommentaires((prev) => prev.filter((c) => c.id !== id))
-    } catch {
-      alert('La suppression a échoué. Réessayez.')
+    } catch (err) {
+      setMessageErreur(err instanceof Error ? err.message : 'La suppression a échoué.')
     }
   }
 
@@ -250,6 +271,11 @@ function PanneauCommentaires({
       <img src={photo.url} alt="" className="max-h-[45vh] w-full bg-black object-contain" />
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-violet-400">Commentaires</h2>
+        {messageErreur && (
+          <p className="mb-3 rounded-xl border border-rose-500/60 bg-rose-950/60 px-3 py-2 text-sm font-semibold text-rose-200">
+            {messageErreur}
+          </p>
+        )}
         {chargement && <p className="text-sm text-violet-400">Chargement…</p>}
         {!chargement && commentaires.length === 0 && (
           <p className="text-sm text-violet-400">Aucun commentaire sur cette photo.</p>
@@ -264,7 +290,7 @@ function PanneauCommentaires({
               <button
                 type="button"
                 onClick={() => void handleSupprimer(c.id)}
-                className="shrink-0 text-sm font-bold text-rose-300 underline"
+                className="shrink-0 rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white active:bg-rose-700"
               >
                 Supprimer
               </button>

@@ -18,9 +18,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const admin = getSupabaseAdmin()
     const { error } = await admin.from('commentaires').delete().eq('id', id)
-    if (error) throw error
+    if (error) {
+      res.status(500).json({ erreur: `Suppression impossible : ${error.message}` })
+      return
+    }
     res.status(200).json({ ok: true })
-  } catch {
-    res.status(500).json({ erreur: "La suppression du commentaire a échoué. Réessayez." })
+  } catch (err) {
+    res.status(500).json({ erreur: err instanceof Error ? err.message : 'Erreur inconnue.' })
   }
 }
