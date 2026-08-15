@@ -5,7 +5,7 @@ import BoutonAjoutPhotos from '../components/BoutonAjoutPhotos'
 import FileEnvoi from '../components/FileEnvoi'
 import Galerie from '../components/Galerie'
 import Defis from '../components/Defis'
-import PresentationJeu from '../components/PresentationJeu'
+import Presentation from '../components/Presentation'
 import PhotoPleinEcran from '../components/PhotoPleinEcran'
 import { useUploadQueue } from '../lib/useUploadQueue'
 import { getDefisAccomplis } from '../lib/localPrefs'
@@ -87,7 +87,14 @@ function ContenuGalerie({ prenom }: { prenom: string }) {
         <PhotoPleinEcran photo={photoOuverte} prenom={prenom} onFermer={() => setPhotoOuverte(null)} />
       )}
 
-      {presentationVisible && <PresentationJeu onFermer={() => setPresentationVisible(false)} />}
+      {presentationVisible && (
+        <Presentation
+          onChoisir={(choix) => {
+            setOnglet(choix)
+            setPresentationVisible(false)
+          }}
+        />
+      )}
     </div>
   )
 }
