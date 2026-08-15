@@ -36,6 +36,24 @@ create index if not exists photos_created_at_idx on public.photos (created_at de
 create index if not exists commentaires_photo_id_created_at_idx on public.commentaires (photo_id, created_at);
 
 -- =========================================================================
+-- DROITS D'ACCÈS À L'API
+--
+-- Rend les deux tables visibles depuis l'application, que l'option
+-- "Exposer automatiquement les nouvelles tables" ait été cochée ou non à la
+-- création du projet Supabase. Sans cela, l'envoi d'une photo échouerait
+-- avec une erreur "permission denied for table photos".
+--
+-- Remarquez que seuls select (lire) et insert (ajouter) sont accordés :
+-- ni update ni delete. C'est une deuxième barrière, en plus des règles RLS
+-- ci-dessous : même en cas d'erreur dans une politique, personne ne peut
+-- supprimer une photo ou un commentaire depuis le navigateur.
+-- =========================================================================
+
+grant usage on schema public to anon, authenticated;
+grant select, insert on public.photos to anon, authenticated;
+grant select, insert on public.commentaires to anon, authenticated;
+
+-- =========================================================================
 -- ROW LEVEL SECURITY — TABLES
 --
 -- Principe : lecture et insertion publiques (l'application n'a pas de

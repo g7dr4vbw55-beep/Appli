@@ -22,8 +22,12 @@ Supabase héberge la base de données et le stockage des photos.
 3. Choisissez une organisation (créez-en une si c'est votre premier projet), puis remplissez :
    - **Name** : par exemple `mariage-photos`
    - **Database Password** : cliquez sur "Generate a password" et **copiez-le dans un endroit sûr** (vous n'en aurez pas besoin pour cette application, mais gardez-le au cas où).
-   - **Region** : choisissez la région la plus proche du lieu du mariage (par exemple `eu-west-3` pour Paris).
-4. Cliquez sur **Create new project** et patientez 1 à 2 minutes que le projet soit prêt.
+   - **Region** : choisissez la région la plus proche du lieu du mariage (par exemple "West EU (Paris)").
+4. Plus bas, une section **Security** propose trois cases à cocher :
+   - **Enable Data API** ("Activer l'API de données") : **laissez-la cochée**. C'est elle qui permet à l'application de communiquer avec la base.
+   - **Expose new tables automatically** ("Afficher automatiquement les nouvelles tables") : cochez-la ou non, cela n'a pas d'importance — le script SQL de l'étape 3 accorde de toute façon les droits nécessaires lui-même.
+   - **Enable automatic RLS** ("Activer le RLS automatique") : **laissez-la décochée**. Le script SQL active déjà la sécurité au niveau des lignes sur nos deux tables, explicitement.
+5. Cliquez sur **Create new project** et patientez 1 à 2 minutes que le projet soit prêt.
 
 ## Étape 2 — Récupérer les clés du projet
 
