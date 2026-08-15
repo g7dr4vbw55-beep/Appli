@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 
 export type DemandeStatut = 'En attente' | 'Validée' | 'Refusée';
@@ -10,7 +11,15 @@ export type Demande = {
   statut: DemandeStatut;
 };
 
-let demandes: Demande[] = [];
+type EtatDemandes = {
+  demandes: Demande[];
+  /** Vrai tant que les demandes enregistrées sur l'appareil n'ont pas été relues. */
+  chargement: boolean;
+};
+
+const CLE_STOCKAGE = 'mon-appli.demandes.v1';
+
+let etat: EtatDemandes = { demandes: [], chargement: true };
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -23,29 +32,81 @@ function subscribe(listener: () => void) {
 }
 
 function getSnapshot() {
-  return demandes;
+  return etat;
+}
+
+function majEtat(patch: Partial<EtatDemandes>) {
+  etat = { ...etat, ...patch };
+  emit();
+}
+
+async function persister(demandes: Demande[]) {
+  try {
+    await AsyncStorage.setItem(CLE_STOCKAGE, JSON.stringify(demandes));
+  } catch (error) {
+    console.warn('Enregistrement des demandes impossible.', error);
+  }
+}
+
+function estDemande(valeur: unknown): valeur is Demande {
+  const d = valeur as Demande;
+  return (
+    typeof d === 'object' &&
+    d !== null &&
+    typeof d.id === 'string' &&
+    typeof d.date === 'string' &&
+    typeof d.heure === 'string' &&
+    typeof d.commentaire === 'string' &&
+    (d.statut === 'En attente' || d.statut === 'Validée' || d.statut === 'Refusée')
+  );
+}
+
+async function relireDepuisAppareil() {
+  try {
+    const brut = await AsyncStorage.getItem(CLE_STOCKAGE);
+    const analyse: unknown = brut ? JSON.parse(brut) : [];
+    const demandes = Array.isArray(analyse) ? analyse.filter(estDemande) : [];
+    majEtat({ demandes, chargement: false });
+  } catch (error) {
+    console.warn('Lecture des demandes enregistrées impossible.', error);
+    majEtat({ chargement: false });
+  }
+}
+
+// Le rendu web se prépare d'abord sur un serveur, où le stockage de l'appareil
+// n'existe pas. On ne relit donc qu'une fois arrivé sur un vrai appareil
+// (téléphone ou navigateur), où `window` est disponible.
+if (typeof window !== 'undefined') {
+  relireDepuisAppareil();
 }
 
 export function addDemande(input: { date: string; heure: string; commentaire: string }) {
-  demandes = [
-    ...demandes,
+  const demandes = [
+    ...etat.demandes,
     {
       id: `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
       date: input.date,
       heure: input.heure,
       commentaire: input.commentaire,
-      statut: 'En attente',
+      statut: 'En attente' as const,
     },
   ];
-  emit();
+  majEtat({ demandes });
+  persister(demandes);
 }
 
 export function setDemandeStatut(id: string, statut: DemandeStatut) {
-  demandes = demandes.map((demande) => (demande.id === id ? { ...demande, statut } : demande));
-  emit();
+  const demandes = etat.demandes.map((demande) =>
+    demande.id === id ? { ...demande, statut } : demande
+  );
+  majEtat({ demandes });
+  persister(demandes);
 }
 
 export function useDemandesEnAttente() {
-  const all = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  return all.filter((demande) => demande.statut === 'En attente');
+  const { demandes, chargement } = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  return {
+    demandes: demandes.filter((demande) => demande.statut === 'En attente'),
+    chargement,
+  };
 }

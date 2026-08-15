@@ -64,7 +64,7 @@ function DemandeCard({ demande }: { demande: Demande }) {
 export default function DemandesScreen() {
   const safeAreaInsets = useSafeAreaInsets();
   const theme = useTheme();
-  const demandesEnAttente = useDemandesEnAttente();
+  const { demandes: demandesEnAttente, chargement } = useDemandesEnAttente();
   const insets = {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
@@ -99,7 +99,9 @@ export default function DemandesScreen() {
       }
       ListEmptyComponent={
         <ThemedView style={styles.emptyState}>
-          <ThemedText themeColor="textSecondary">Aucune demande en attente.</ThemedText>
+          <ThemedText themeColor="textSecondary">
+            {chargement ? 'Chargement…' : 'Aucune demande en attente.'}
+          </ThemedText>
         </ThemedView>
       }
       renderItem={({ item }) => <DemandeCard demande={item} />}
