@@ -99,7 +99,9 @@ Si vous ne le voyez pas, créez-le à la main avec **New bucket** : nom `photos`
 
    Aucune de ces valeurs n'est inventée par l'application : c'est à vous de les récupérer et de les coller, en suivant exactement le tableau ci-dessus.
 
-## Étape 6 — Tester en local (optionnel mais recommandé)
+## Étape 6 — Tester en local (optionnel — ordinateur uniquement)
+
+**Depuis un téléphone, sautez cette étape et passez directement à l'étape 7.** Elle démarre un serveur sur votre propre machine, à l'adresse `http://localhost:5173` : cette adresse ne désigne que l'appareil sur lequel le serveur tourne. Sur un téléphone, elle n'ouvrira jamais rien — c'est normal, ce n'est pas une panne.
 
 Si vous avez [Node.js](https://nodejs.org) installé (version 22.6 ou plus récente) :
 
@@ -116,18 +118,25 @@ Pour tester la page d'administration en local, ouvrez `http://localhost:5173/<VI
 
 ## Étape 7 — Déployer sur Vercel
 
-### Méthode recommandée : via GitHub
+### Méthode recommandée : via GitHub (faisable depuis un téléphone)
 
-1. Créez un dépôt GitHub et poussez-y ce projet (s'il n'y est pas déjà).
-2. Allez sur [vercel.com](https://vercel.com) et créez un compte (le plus simple : "Continue with GitHub").
-3. Cliquez sur **Add New...** > **Project**.
-4. Choisissez votre dépôt GitHub dans la liste (autorisez l'accès si demandé).
-5. Dans l'écran de configuration du projet :
+**Avant tout : vérifiez la branche par défaut de votre dépôt.** Vercel déploie la branche par défaut du dépôt. Si celle-ci contient un autre projet que l'application du mariage, le déploiement échouera ou publiera le mauvais site.
+
+Sur GitHub, ouvrez votre dépôt > **Settings** > **Branches** > **Default branch**, et sélectionnez la branche qui contient le dossier `mariage-photos/` (par exemple `claude/wedding-photo-sharing-app-azgzy8`). Vous pouvez aussi laisser la branche par défaut telle quelle et, après l'import, changer **Settings > Git > Production Branch** côté Vercel : le résultat est le même.
+
+1. Allez sur [vercel.com](https://vercel.com) et créez un compte (le plus simple : "Continue with GitHub").
+2. Cliquez sur **Add New...** > **Project**.
+3. Choisissez votre dépôt GitHub dans la liste (autorisez l'accès si demandé).
+4. Dans l'écran de configuration du projet :
    - **Root Directory** : cliquez sur "Edit" et sélectionnez le dossier **`mariage-photos`** (important : ce dépôt contient aussi un autre projet à la racine, il faut bien pointer vers le sous-dossier).
    - Le **Framework Preset** devrait être détecté automatiquement comme "Vite".
-6. Ouvrez la section **Environment Variables** et ajoutez **chacune** des variables listées dans le tableau de l'étape 5 (les mêmes noms, les mêmes valeurs que dans votre `.env`). Ajoutez-les pour les environnements "Production", "Preview" et "Development" (cochez les trois cases si proposé).
-7. Cliquez sur **Deploy** et patientez 1 à 2 minutes.
-8. Une fois le déploiement terminé, Vercel affiche l'URL de votre site (ex : `https://mariage-photos-xxxx.vercel.app`). C'est l'adresse finale à partager avec vos invités.
+5. Ouvrez la section **Environment Variables** et ajoutez **chacune** des variables listées dans le tableau de l'étape 5 (les mêmes noms, les mêmes valeurs). Ajoutez-les pour les environnements "Production", "Preview" et "Development" (cochez les trois cases si proposé).
+
+   Si vous avez sauté l'étape 6, c'est ici que vous saisissez vos valeurs pour la première fois : vous n'avez pas besoin d'avoir créé de fichier `.env` sur un ordinateur.
+
+6. Cliquez sur **Deploy** et patientez 1 à 2 minutes.
+7. Une fois le déploiement terminé, Vercel affiche l'URL de votre site (ex : `https://mariage-photos-xxxx.vercel.app`). C'est l'adresse finale à partager avec vos invités.
+8. Ouvrez cette URL et vérifiez que l'écran de code d'accès s'affiche, puis envoyez une photo de test. C'est votre vrai test de bout en bout, celui qui remplace l'étape 6.
 
 ### Méthode alternative : sans GitHub, avec la ligne de commande
 
