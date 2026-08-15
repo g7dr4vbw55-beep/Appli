@@ -243,6 +243,28 @@ Toute la configuration visible (titre de l'événement, message d'accueil, coule
 
 Après une modification de `wedding.config.ts`, les icônes et le fichier `manifest.webmanifest` de la PWA sont régénérés automatiquement au moment du `build` (et du `dev`), vous n'avez rien d'autre à faire.
 
+### Les défis photo
+
+L'onglet **Défis** propose aux invités une liste de photos à réaliser pendant la soirée. La liste se modifie dans **[`defis.config.ts`](./defis.config.ts)**, à la racine du projet : un identifiant, un intitulé et un ordre d'affichage par défi.
+
+```ts
+{ id: 'arche', intitule: 'Une photo devant l\'arche fleurie', ordre: 2 },
+```
+
+Ajoutez, retirez ou renommez librement les intitulés. **Un seul point de vigilance : ne changez plus un `id` une fois la soirée commencée.** C'est lui qui est enregistré avec chaque photo ; le modifier détacherait les photos déjà envoyées de leur défi.
+
+Comment cela fonctionne pour l'invité :
+
+- toucher un défi ouvre directement l'appareil photo ; l'icône à droite permet de choisir une photo déjà prise ;
+- la photo envoyée est automatiquement rattachée au défi, et celui-ci se coche avec un compteur du type « 4 défis sur 12 » ;
+- plusieurs invités peuvent réaliser le même défi, et un invité peut le refaire autant de fois qu'il veut ;
+- dans l'album, une liste déroulante permet de n'afficher que les photos d'un défi donné ;
+- les photos envoyées hors défi restent possibles et fonctionnent comme avant.
+
+Les défis accomplis sont mémorisés **sur l'appareil de l'invité** (comme le prénom), et non par compte : sans inscription, deux invités peuvent porter le même prénom, l'appareil est donc le seul repère fiable.
+
+**Si vous avez créé votre base Supabase avant l'ajout de cette fonctionnalité**, exécutez une fois [`supabase/correctif-defis-photo.sql`](./supabase/correctif-defis-photo.sql) dans le SQL Editor de Supabase. Sans cela, l'envoi depuis un défi échoue avec un message qui vous le rappellera. Les photos déjà envoyées ne sont pas modifiées.
+
 ---
 
 ## Limites à connaître (offres gratuites)

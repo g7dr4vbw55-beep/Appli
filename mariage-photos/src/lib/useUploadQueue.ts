@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { compresserPhoto } from './compressImage'
 import { supabase, BUCKET_NAME, urlPublique, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase'
+import { marquerDefiAccompli } from './localPrefs'
 import type { Photo, PhotoAvecUrl } from './types'
 
 export type StatutEnvoi = 'compression' | 'envoi' | 'termine' | 'erreur'
@@ -13,6 +14,8 @@ export interface ElementFile {
   progression: number // 0 à 100
   messageErreur?: string
   fichierOriginal: File
+  /** Défi auquel rattacher la photo, ou null pour un envoi libre. */
+  defi: string | null
 }
 
 export function useUploadQueue(prenom: string, onPhotoEnvoyee: (photo: PhotoAvecUrl) => void) {
@@ -23,7 +26,7 @@ export function useUploadQueue(prenom: string, onPhotoEnvoyee: (photo: PhotoAvec
   }, [])
 
   const traiterElement = useCallback(
-    async (id: string, fichierOriginal: File) => {
+    async (id: string, fichierOriginal: File, defi: string | null) => {
       try {
         majElement(id, { statut: 'compression', progression: 0, messageErreur: undefined })
         const { fichier, largeur, hauteur } = await compresserPhoto(fichierOriginal)
@@ -41,12 +44,16 @@ export function useUploadQueue(prenom: string, onPhotoEnvoyee: (photo: PhotoAvec
             auteur_prenom: prenom,
             largeur,
             hauteur,
+            defi,
           })
           .select()
           .single()
-        if (error || !data) throw new Error('enregistrement')
+        if (error || !data) throw new Error(messageErreurInsertion(error?.message))
 
         majElement(id, { statut: 'termine', progression: 100 })
+        // Le défi n'est marqué accompli qu'une fois la photo réellement
+        // enregistrée : un envoi échoué ne doit pas cocher le défi.
+        if (defi) marquerDefiAccompli(defi)
         onPhotoEnvoyee({ ...(data as Photo), url: urlPublique(cheminStockage) })
       } catch (err) {
         majElement(id, { statut: 'erreur', messageErreur: messageErreurLisible(err) })
@@ -56,7 +63,7 @@ export function useUploadQueue(prenom: string, onPhotoEnvoyee: (photo: PhotoAvec
   )
 
   const ajouterFichiers = useCallback(
-    (fichiers: File[]) => {
+    (fichiers: File[], defi: string | null = null) => {
       const nouveaux: ElementFile[] = fichiers.map((f) => ({
         id: crypto.randomUUID(),
         nomAffiche: f.name,
@@ -64,10 +71,11 @@ export function useUploadQueue(prenom: string, onPhotoEnvoyee: (photo: PhotoAvec
         statut: 'compression',
         progression: 0,
         fichierOriginal: f,
+        defi,
       }))
       setElements((prev) => [...nouveaux, ...prev])
       nouveaux.forEach((n) => {
-        void traiterElement(n.id, n.fichierOriginal)
+        void traiterElement(n.id, n.fichierOriginal, defi)
       })
     },
     [traiterElement],
@@ -77,7 +85,7 @@ export function useUploadQueue(prenom: string, onPhotoEnvoyee: (photo: PhotoAvec
     (id: string) => {
       const element = elements.find((e) => e.id === id)
       if (!element) return
-      void traiterElement(id, element.fichierOriginal)
+      void traiterElement(id, element.fichierOriginal, element.defi)
     },
     [elements, traiterElement],
   )
@@ -124,10 +132,24 @@ function televerserAvecProgression(
   })
 }
 
+/**
+ * Repère le cas d'une base qui n'a pas encore la colonne « defi », pour
+ * pouvoir indiquer la manipulation exacte plutôt qu'une panne générique.
+ */
+function messageErreurInsertion(messageSupabase: string | undefined): string {
+  if (messageSupabase && /defi/i.test(messageSupabase) && /column|colonne|schema/i.test(messageSupabase)) {
+    return 'colonne-defi-manquante'
+  }
+  return 'enregistrement'
+}
+
 function messageErreurLisible(err: unknown): string {
   const msg = err instanceof Error ? err.message : ''
   if (msg === 'reseau') return 'Pas de connexion internet stable. Vérifiez votre réseau et réessayez.'
   if (msg.startsWith('http-5')) return 'Le service est momentanément indisponible. Réessayez dans un instant.'
+  if (msg === 'colonne-defi-manquante') {
+    return "Les défis ne sont pas encore activés sur la base : exécutez le fichier supabase/correctif-defis-photo.sql dans Supabase."
+  }
   if (msg === 'enregistrement') return "La photo est envoyée mais n'a pas pu être enregistrée. Réessayez."
   return "Une erreur est survenue pendant l'envoi. Appuyez sur réessayer."
 }

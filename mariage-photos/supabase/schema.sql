@@ -21,8 +21,14 @@ create table if not exists public.photos (
   storage_path   text not null unique,
   auteur_prenom  text not null check (char_length(trim(auteur_prenom)) between 1 and 50),
   largeur        integer,
-  hauteur        integer
+  hauteur        integer,
+  -- Identifiant du défi photo associé, tel que défini dans defis.config.ts.
+  -- Facultatif : une photo envoyée hors défi laisse cette colonne vide.
+  defi           text
 );
+
+-- Pour une base créée avant l'ajout des défis photo.
+alter table public.photos add column if not exists defi text;
 
 create table if not exists public.commentaires (
   id             uuid primary key default gen_random_uuid(),
@@ -33,6 +39,8 @@ create table if not exists public.commentaires (
 );
 
 create index if not exists photos_created_at_idx on public.photos (created_at desc);
+-- Accélère le filtrage de la galerie par défi.
+create index if not exists photos_defi_created_at_idx on public.photos (defi, created_at desc);
 create index if not exists commentaires_photo_id_created_at_idx on public.commentaires (photo_id, created_at);
 
 -- =========================================================================

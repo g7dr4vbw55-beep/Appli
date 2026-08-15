@@ -3,11 +3,17 @@ import type { Commentaire, Photo, PhotoAvecUrl } from './types'
 
 const TAILLE_PAGE = 24
 
-export async function chargerPagePhotos(avant?: string): Promise<{ photos: PhotoAvecUrl[]; fini: boolean }> {
+export async function chargerPagePhotos(
+  avant?: string,
+  defi?: string | null,
+): Promise<{ photos: PhotoAvecUrl[]; fini: boolean }> {
   let requete = supabase.from('photos').select('*').order('created_at', { ascending: false }).limit(TAILLE_PAGE)
 
   if (avant) {
     requete = requete.lt('created_at', avant)
+  }
+  if (defi) {
+    requete = requete.eq('defi', defi)
   }
 
   const { data, error } = await requete

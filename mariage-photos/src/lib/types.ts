@@ -5,6 +5,8 @@ export interface Photo {
   auteur_prenom: string
   largeur: number | null
   hauteur: number | null
+  /** Identifiant du défi photo associé, ou null si la photo a été envoyée hors défi. */
+  defi: string | null
 }
 
 export interface PhotoAvecUrl extends Photo {
