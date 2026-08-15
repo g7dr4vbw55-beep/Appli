@@ -1,17 +1,102 @@
 import { SymbolView } from 'expo-symbols';
-import { FlatList, Platform, Pressable, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { FlatList, Platform, Pressable, StyleSheet, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { setDemandeStatut, useDemandes, type Demande } from '@/data/demandes-store';
+import {
+  setDemandeStatut,
+  useDemandes,
+  validerAvecCreneau,
+  type Demande,
+} from '@/data/demandes-store';
 import { useTheme } from '@/hooks/use-theme';
 
 function DemandeCard({ demande }: { demande: Demande }) {
   const theme = useTheme();
   const enAttente = demande.statut === 'En attente';
+  const [ajustement, setAjustement] = useState<{ date: string; heure: string } | null>(null);
+  const creneauAjuste = demande.dateInitiale !== undefined || demande.heureInitiale !== undefined;
+
+  const creneauValide =
+    ajustement !== null && ajustement.date.trim().length > 0 && ajustement.heure.trim().length > 0;
+
+  if (enAttente && ajustement !== null) {
+    return (
+      <ThemedView type="backgroundElement" style={styles.card}>
+        <ThemedText type="smallBold">Ajuster le créneau</ThemedText>
+
+        <ThemedView type="backgroundElement" style={styles.ajustChamps}>
+          <ThemedView type="backgroundElement" style={styles.ajustChamp}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Date
+            </ThemedText>
+            <TextInput
+              value={ajustement.date}
+              onChangeText={(date) => setAjustement({ ...ajustement, date })}
+              placeholder="AAAA-MM-JJ"
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.ajustInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
+            />
+          </ThemedView>
+          <ThemedView type="backgroundElement" style={styles.ajustChamp}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Heure
+            </ThemedText>
+            <TextInput
+              value={ajustement.heure}
+              onChangeText={(heure) => setAjustement({ ...ajustement, heure })}
+              placeholder="HH:MM"
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.ajustInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
+            />
+          </ThemedView>
+        </ThemedView>
+
+        <ThemedView type="backgroundElement" style={styles.actionsRow}>
+          <Pressable
+            onPress={() => {
+              validerAvecCreneau(demande.id, {
+                date: ajustement.date.trim(),
+                heure: ajustement.heure.trim(),
+              });
+              setAjustement(null);
+            }}
+            disabled={!creneauValide}
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.validateButton,
+              !creneauValide && styles.disabled,
+              pressed && creneauValide && styles.pressed,
+            ]}>
+            <SymbolView
+              tintColor="#15803D"
+              name={{ ios: 'checkmark.circle', android: 'check_circle', web: 'check_circle' }}
+              size={14}
+            />
+            <ThemedText type="smallBold" style={styles.validateText}>
+              Valider à ce créneau
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setAjustement(null)}
+            style={({ pressed }) => [
+              styles.actionButton,
+              { backgroundColor: theme.backgroundSelected },
+              pressed && styles.pressed,
+            ]}>
+            <ThemedText type="smallBold" themeColor="textSecondary">
+              Annuler
+            </ThemedText>
+          </Pressable>
+        </ThemedView>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
@@ -26,6 +111,13 @@ function DemandeCard({ demande }: { demande: Demande }) {
           />
         )}
       </ThemedView>
+
+      {creneauAjuste && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Demandé initialement : {demande.dateInitiale ?? demande.date} ·{' '}
+          {demande.heureInitiale ?? demande.heure}
+        </ThemedText>
+      )}
 
       {demande.commentaire.length > 0 && (
         <ThemedText type="default" themeColor="textSecondary">
@@ -50,6 +142,23 @@ function DemandeCard({ demande }: { demande: Demande }) {
               />
               <ThemedText type="smallBold" style={styles.validateText}>
                 Valider
+              </ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setAjustement({ date: demande.date, heure: demande.heure })}
+              style={({ pressed }) => [
+                styles.actionButton,
+                { backgroundColor: theme.backgroundSelected },
+                pressed && styles.pressed,
+              ]}>
+              <SymbolView
+                tintColor={theme.textSecondary}
+                name={{ ios: 'clock.arrow.circlepath', android: 'schedule', web: 'schedule' }}
+                size={14}
+              />
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Ajuster
               </ThemedText>
             </Pressable>
 
@@ -198,8 +307,27 @@ const styles = StyleSheet.create({
   },
   actionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.two,
     marginTop: Spacing.one,
+  },
+  ajustChamps: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  ajustChamp: {
+    flex: 1,
+    gap: Spacing.one,
+  },
+  ajustInput: {
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.two,
+    fontSize: 16,
+  },
+  disabled: {
+    opacity: 0.4,
   },
   actionButton: {
     flexDirection: 'row',

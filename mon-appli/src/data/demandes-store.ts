@@ -9,6 +9,9 @@ export type Demande = {
   heure: string;
   commentaire: string;
   statut: DemandeStatut;
+  /** Créneau demandé par le client, conservé dès que tu l'as ajusté. */
+  dateInitiale?: string;
+  heureInitiale?: string;
 };
 
 type EtatDemandes = {
@@ -57,7 +60,9 @@ function estDemande(valeur: unknown): valeur is Demande {
     typeof d.date === 'string' &&
     typeof d.heure === 'string' &&
     typeof d.commentaire === 'string' &&
-    (d.statut === 'En attente' || d.statut === 'Validée' || d.statut === 'Refusée')
+    (d.statut === 'En attente' || d.statut === 'Validée' || d.statut === 'Refusée') &&
+    (d.dateInitiale === undefined || typeof d.dateInitiale === 'string') &&
+    (d.heureInitiale === undefined || typeof d.heureInitiale === 'string')
   );
 }
 
@@ -91,6 +96,28 @@ export function addDemande(input: { date: string; heure: string; commentaire: st
       statut: 'En attente' as const,
     },
   ];
+  majEtat({ demandes });
+  persister(demandes);
+}
+
+/**
+ * Cale la demande sur le créneau qui t'arrange et la valide dans la foulée.
+ * Le créneau demandé par le client est mémorisé au premier ajustement
+ * seulement, pour qu'un second ajustement ne l'efface pas.
+ */
+export function validerAvecCreneau(id: string, creneau: { date: string; heure: string }) {
+  const demandes = etat.demandes.map((demande) => {
+    if (demande.id !== id) return demande;
+    const ajuste = creneau.date !== demande.date || creneau.heure !== demande.heure;
+    return {
+      ...demande,
+      date: creneau.date,
+      heure: creneau.heure,
+      dateInitiale: demande.dateInitiale ?? (ajuste ? demande.date : undefined),
+      heureInitiale: demande.heureInitiale ?? (ajuste ? demande.heure : undefined),
+      statut: 'Validée' as const,
+    };
+  });
   majEtat({ demandes });
   persister(demandes);
 }
