@@ -43,15 +43,22 @@ create index if not exists commentaires_photo_id_created_at_idx on public.commen
 -- création du projet Supabase. Sans cela, l'envoi d'une photo échouerait
 -- avec une erreur "permission denied for table photos".
 --
--- Remarquez que seuls select (lire) et insert (ajouter) sont accordés :
+-- Les invités (anon) ne reçoivent que select (lire) et insert (ajouter) :
 -- ni update ni delete. C'est une deuxième barrière, en plus des règles RLS
 -- ci-dessous : même en cas d'erreur dans une politique, personne ne peut
 -- supprimer une photo ou un commentaire depuis le navigateur.
+--
+-- service_role est le rôle des fonctions serveur de la page
+-- d'administration : lui seul reçoit les droits de suppression. Sans cette
+-- ligne, l'administration échoue avec "permission denied for table photos"
+-- alors même que la galerie des invités fonctionne normalement.
 -- =========================================================================
 
-grant usage on schema public to anon, authenticated;
+grant usage on schema public to anon, authenticated, service_role;
 grant select, insert on public.photos to anon, authenticated;
 grant select, insert on public.commentaires to anon, authenticated;
+grant all privileges on public.photos to service_role;
+grant all privileges on public.commentaires to service_role;
 
 -- =========================================================================
 -- ROW LEVEL SECURITY — TABLES

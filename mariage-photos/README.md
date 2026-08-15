@@ -210,6 +210,8 @@ L'écran de connexion indique la cause précise :
 | « Mot de passe incorrect. » | Le mot de passe ne correspond pas. Suivez la procédure ci-dessus pour en définir un nouveau. |
 | « Aucun mot de passe n'est défini sur le serveur… » | La variable `ADMIN_PASSWORD` manque dans Vercel. Ajoutez-la, puis relancez un déploiement. |
 | « La partie serveur de l'administration n'est pas déployée… » | Le **Root Directory** du projet Vercel ne pointe pas sur `mariage-photos`. Corrigez-le dans Settings > General, puis relancez un déploiement. |
+| « permission denied for table photos » (ou `commentaires`) | Le rôle `service_role` n'a pas les droits sur vos tables. Exécutez [`supabase/correctif-droits-admin.sql`](./supabase/correctif-droits-admin.sql) dans le SQL Editor de Supabase. Effet immédiat, aucun redéploiement nécessaire. |
+| « Invalid API key » | La variable `SUPABASE_SERVICE_ROLE_KEY` dans Vercel ne correspond plus à votre clé Supabase (typiquement après une rotation de clé). Recopiez la clé secrète actuelle, puis relancez un déploiement. |
 
 ### Si une clé ou un mot de passe a été exposé par erreur
 
