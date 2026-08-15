@@ -16,6 +16,8 @@ const statutTone: Record<CreneauStatut, StatusTone> = {
 };
 
 function CreneauCard({ creneau }: { creneau: CreneauLivraison }) {
+  const theme = useTheme();
+
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedView type="backgroundElement" style={styles.cardHeader}>
@@ -24,7 +26,24 @@ function CreneauCard({ creneau }: { creneau: CreneauLivraison }) {
         </ThemedText>
         <StatusBadge label={creneau.statut} tone={statutTone[creneau.statut]} />
       </ThemedView>
-      <ThemedText type="default">{creneau.piece}</ThemedText>
+
+      <ThemedText type="default">
+        {creneau.client} — {creneau.chantier}
+      </ThemedText>
+
+      <ThemedView type="backgroundElement" style={styles.piecesListe}>
+        {creneau.pieces.map((repere) => (
+          <ThemedView
+            key={repere}
+            style={[styles.pieceChip, { backgroundColor: theme.backgroundSelected }]}>
+            <ThemedText type="smallBold">{repere}</ThemedText>
+          </ThemedView>
+        ))}
+      </ThemedView>
+
+      <ThemedText type="small" themeColor="textSecondary">
+        {creneau.pieces.length} pièce{creneau.pieces.length > 1 ? 's' : ''} au chargement
+      </ThemedText>
     </ThemedView>
   );
 }
@@ -94,5 +113,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: Spacing.two,
+  },
+  piecesListe: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  pieceChip: {
+    paddingVertical: Spacing.half,
+    paddingHorizontal: Spacing.two,
+    borderRadius: Spacing.two,
   },
 });

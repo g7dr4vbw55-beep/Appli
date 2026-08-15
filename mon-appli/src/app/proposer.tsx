@@ -28,12 +28,21 @@ export default function ProposerScreen() {
     },
   });
 
+  const [client, setClient] = useState('');
+  const [chantier, setChantier] = useState('');
   const [date, setDate] = useState('');
   const [heure, setHeure] = useState('');
+  const [pieces, setPieces] = useState<string[]>([]);
+  const [pieceEnCours, setPieceEnCours] = useState('');
   const [commentaire, setCommentaire] = useState('');
   const [confirmation, setConfirmation] = useState(false);
 
-  const canSubmit = date.trim().length > 0 && heure.trim().length > 0;
+  const canSubmit =
+    client.trim().length > 0 &&
+    chantier.trim().length > 0 &&
+    date.trim().length > 0 &&
+    heure.trim().length > 0 &&
+    pieces.length > 0;
 
   function handleChange(setter: (value: string) => void) {
     return (value: string) => {
@@ -42,11 +51,38 @@ export default function ProposerScreen() {
     };
   }
 
+  function ajouterPiece() {
+    const repere = pieceEnCours.trim();
+    if (repere.length === 0 || pieces.includes(repere)) {
+      setPieceEnCours('');
+      return;
+    }
+    setPieces([...pieces, repere]);
+    setPieceEnCours('');
+    setConfirmation(false);
+  }
+
+  function retirerPiece(repere: string) {
+    setPieces(pieces.filter((p) => p !== repere));
+    setConfirmation(false);
+  }
+
   function handleSubmit() {
     if (!canSubmit) return;
-    addDemande({ date: date.trim(), heure: heure.trim(), commentaire: commentaire.trim() });
+    addDemande({
+      client: client.trim(),
+      chantier: chantier.trim(),
+      date: date.trim(),
+      heure: heure.trim(),
+      pieces,
+      commentaire: commentaire.trim(),
+    });
+    setClient('');
+    setChantier('');
     setDate('');
     setHeure('');
+    setPieces([]);
+    setPieceEnCours('');
     setCommentaire('');
     setConfirmation(true);
   }
@@ -58,16 +94,38 @@ export default function ProposerScreen() {
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Proposer un créneau</ThemedText>
+          <ThemedText type="subtitle">Proposer un camion</ThemedText>
           <ThemedText themeColor="textSecondary">
-            Envoyez une demande de créneau de livraison. Elle sera ajoutée à la liste des demandes
+            Annoncez un camion et son chargement. La demande sera ajoutée à la liste des demandes
             en attente.
           </ThemedText>
         </ThemedView>
 
         <ThemedView type="backgroundElement" style={styles.form}>
           <ThemedView type="backgroundElement" style={styles.field}>
-            <ThemedText type="smallBold">Date souhaitée</ThemedText>
+            <ThemedText type="smallBold">Client</ThemedText>
+            <TextInput
+              value={client}
+              onChangeText={handleChange(setClient)}
+              placeholder="Nom du client"
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+            />
+          </ThemedView>
+
+          <ThemedView type="backgroundElement" style={styles.field}>
+            <ThemedText type="smallBold">Chantier</ThemedText>
+            <TextInput
+              value={chantier}
+              onChangeText={handleChange(setChantier)}
+              placeholder="Nom ou lieu du chantier"
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+            />
+          </ThemedView>
+
+          <ThemedView type="backgroundElement" style={styles.field}>
+            <ThemedText type="smallBold">Date d&apos;arrivée</ThemedText>
             <TextInput
               value={date}
               onChangeText={handleChange(setDate)}
@@ -78,7 +136,7 @@ export default function ProposerScreen() {
           </ThemedView>
 
           <ThemedView type="backgroundElement" style={styles.field}>
-            <ThemedText type="smallBold">Heure souhaitée</ThemedText>
+            <ThemedText type="smallBold">Heure d&apos;arrivée</ThemedText>
             <TextInput
               value={heure}
               onChangeText={handleChange(setHeure)}
@@ -86,6 +144,60 @@ export default function ProposerScreen() {
               placeholderTextColor={theme.textSecondary}
               style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
             />
+          </ThemedView>
+
+          <ThemedView type="backgroundElement" style={styles.field}>
+            <ThemedText type="smallBold">Pièces chargées</ThemedText>
+            <ThemedView type="backgroundElement" style={styles.pieceSaisie}>
+              <TextInput
+                value={pieceEnCours}
+                onChangeText={setPieceEnCours}
+                onSubmitEditing={ajouterPiece}
+                returnKeyType="done"
+                placeholder="Repère (PT118, ESC24…)"
+                placeholderTextColor={theme.textSecondary}
+                style={[
+                  styles.input,
+                  styles.pieceInput,
+                  { color: theme.text, borderColor: theme.backgroundSelected },
+                ]}
+              />
+              <Pressable
+                onPress={ajouterPiece}
+                disabled={pieceEnCours.trim().length === 0}
+                style={({ pressed }) => [
+                  styles.ajouterPiece,
+                  { backgroundColor: theme.backgroundSelected },
+                  pieceEnCours.trim().length === 0 && styles.disabled,
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold">Ajouter</ThemedText>
+              </Pressable>
+            </ThemedView>
+
+            {pieces.length > 0 ? (
+              <ThemedView type="backgroundElement" style={styles.piecesListe}>
+                {pieces.map((repere) => (
+                  <Pressable
+                    key={repere}
+                    onPress={() => retirerPiece(repere)}
+                    style={({ pressed }) => [
+                      styles.pieceChip,
+                      { backgroundColor: theme.backgroundSelected },
+                      pressed && styles.pressed,
+                    ]}>
+                    <ThemedText type="smallBold">{repere}</ThemedText>
+                    <ThemedText type="smallBold" themeColor="textSecondary">
+                      ✕
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </ThemedView>
+            ) : (
+              <ThemedText type="small" themeColor="textSecondary">
+                Ajoutez au moins une pièce. Touchez une pièce pour la retirer.
+              </ThemedText>
+            )}
           </ThemedView>
 
           <ThemedView type="backgroundElement" style={styles.field}>
@@ -166,6 +278,36 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 90,
     textAlignVertical: 'top',
+  },
+  pieceSaisie: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    alignItems: 'stretch',
+  },
+  pieceInput: {
+    flex: 1,
+  },
+  ajouterPiece: {
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.three,
+    borderRadius: Spacing.two,
+  },
+  piecesListe: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  pieceChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.two,
+    borderRadius: Spacing.two,
+  },
+  disabled: {
+    opacity: 0.4,
   },
   submitButton: {
     borderRadius: Spacing.three,

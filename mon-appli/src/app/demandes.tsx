@@ -120,8 +120,26 @@ function DemandeCard({ demande }: { demande: Demande }) {
         </ThemedText>
       )}
 
+      {(demande.client.length > 0 || demande.chantier.length > 0) && (
+        <ThemedText type="default">
+          {[demande.client, demande.chantier].filter((v) => v.length > 0).join(' — ')}
+        </ThemedText>
+      )}
+
+      {demande.pieces.length > 0 && (
+        <ThemedView type="backgroundElement" style={styles.piecesListe}>
+          {demande.pieces.map((repere) => (
+            <ThemedView
+              key={repere}
+              style={[styles.pieceChip, { backgroundColor: theme.backgroundSelected }]}>
+              <ThemedText type="smallBold">{repere}</ThemedText>
+            </ThemedView>
+          ))}
+        </ThemedView>
+      )}
+
       {demande.commentaire.length > 0 && (
-        <ThemedText type="default" themeColor="textSecondary">
+        <ThemedText type="small" themeColor="textSecondary">
           {demande.commentaire}
         </ThemedText>
       )}
@@ -329,6 +347,16 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.4,
+  },
+  piecesListe: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  pieceChip: {
+    paddingVertical: Spacing.half,
+    paddingHorizontal: Spacing.two,
+    borderRadius: Spacing.two,
   },
   actionButton: {
     flexDirection: 'row',

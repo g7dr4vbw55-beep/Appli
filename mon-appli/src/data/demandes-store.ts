@@ -3,10 +3,16 @@ import { useSyncExternalStore } from 'react';
 
 export type DemandeStatut = 'En attente' | 'Validée' | 'Refusée';
 
+/** Un camion qui arrive à une date et une heure, chargé de plusieurs pièces. */
 export type Demande = {
   id: string;
+  client: string;
+  chantier: string;
+  /** Date et heure d'arrivée du camion. */
   date: string;
   heure: string;
+  /** Repères des pièces chargées : PT118, ESC24, LG09… */
+  pieces: string[];
   commentaire: string;
   statut: DemandeStatut;
   /** Créneau demandé par le client, conservé dès que tu l'as ajusté. */
@@ -51,26 +57,45 @@ async function persister(demandes: Demande[]) {
   }
 }
 
-function estDemande(valeur: unknown): valeur is Demande {
-  const d = valeur as Demande;
-  return (
-    typeof d === 'object' &&
-    d !== null &&
-    typeof d.id === 'string' &&
-    typeof d.date === 'string' &&
-    typeof d.heure === 'string' &&
-    typeof d.commentaire === 'string' &&
-    (d.statut === 'En attente' || d.statut === 'Validée' || d.statut === 'Refusée') &&
-    (d.dateInitiale === undefined || typeof d.dateInitiale === 'string') &&
-    (d.heureInitiale === undefined || typeof d.heureInitiale === 'string')
-  );
+const texte = (valeur: unknown) => (typeof valeur === 'string' ? valeur : '');
+
+/**
+ * Remet une demande enregistrée à la forme attendue par l'appli d'aujourd'hui.
+ *
+ * Les demandes créées avant l'ajout du client, du chantier et des pièces n'ont
+ * pas ces champs : on les complète à vide plutôt que de rejeter la demande,
+ * sinon une mise à jour de l'appli effacerait le travail déjà saisi.
+ * Renvoie `null` seulement si la demande n'a aucune identité exploitable.
+ */
+function normaliserDemande(valeur: unknown): Demande | null {
+  if (typeof valeur !== 'object' || valeur === null) return null;
+  const d = valeur as Record<string, unknown>;
+  if (typeof d.id !== 'string') return null;
+
+  const statut = d.statut;
+  if (statut !== 'En attente' && statut !== 'Validée' && statut !== 'Refusée') return null;
+
+  return {
+    id: d.id,
+    client: texte(d.client),
+    chantier: texte(d.chantier),
+    date: texte(d.date),
+    heure: texte(d.heure),
+    pieces: Array.isArray(d.pieces) ? d.pieces.filter((p): p is string => typeof p === 'string') : [],
+    commentaire: texte(d.commentaire),
+    statut,
+    dateInitiale: typeof d.dateInitiale === 'string' ? d.dateInitiale : undefined,
+    heureInitiale: typeof d.heureInitiale === 'string' ? d.heureInitiale : undefined,
+  };
 }
 
 async function relireDepuisAppareil() {
   try {
     const brut = await AsyncStorage.getItem(CLE_STOCKAGE);
     const analyse: unknown = brut ? JSON.parse(brut) : [];
-    const demandes = Array.isArray(analyse) ? analyse.filter(estDemande) : [];
+    const demandes = Array.isArray(analyse)
+      ? analyse.map(normaliserDemande).filter((d): d is Demande => d !== null)
+      : [];
     majEtat({ demandes, chargement: false });
   } catch (error) {
     console.warn('Lecture des demandes enregistrées impossible.', error);
@@ -85,13 +110,23 @@ if (typeof window !== 'undefined') {
   relireDepuisAppareil();
 }
 
-export function addDemande(input: { date: string; heure: string; commentaire: string }) {
+export function addDemande(input: {
+  client: string;
+  chantier: string;
+  date: string;
+  heure: string;
+  pieces: string[];
+  commentaire: string;
+}) {
   const demandes = [
     ...etat.demandes,
     {
       id: `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+      client: input.client,
+      chantier: input.chantier,
       date: input.date,
       heure: input.heure,
+      pieces: input.pieces,
       commentaire: input.commentaire,
       statut: 'En attente' as const,
     },
