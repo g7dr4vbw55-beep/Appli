@@ -12,24 +12,45 @@ import {
   useDemandes,
   validerAvecCreneau,
   type Demande,
+  type PieceChargee,
 } from '@/data/demandes-store';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDateFr } from '@/lib/dates';
-import { formatPoids, totalPoids } from '@/lib/poids';
+import { formatPoids, piecesRetenues, totalPoids } from '@/lib/poids';
 
 function DemandeCard({ demande }: { demande: Demande }) {
   const theme = useTheme();
   const enAttente = demande.statut === 'En attente';
-  const [ajustement, setAjustement] = useState<{ date: string; heure: string } | null>(null);
+  const [ajustement, setAjustement] = useState<{
+    date: string;
+    heure: string;
+    pieces: PieceChargee[];
+  } | null>(null);
   const creneauAjuste = demande.dateInitiale !== undefined || demande.heureInitiale !== undefined;
+  const nbRetirees = demande.pieces.filter((piece) => piece.retiree).length;
 
   const creneauValide =
-    ajustement !== null && ajustement.date.trim().length > 0 && ajustement.heure.trim().length > 0;
+    ajustement !== null &&
+    ajustement.date.trim().length > 0 &&
+    ajustement.heure.trim().length > 0 &&
+    piecesRetenues(ajustement.pieces).length > 0;
+
+  function basculerPiece(repere: string) {
+    if (ajustement === null) return;
+    setAjustement({
+      ...ajustement,
+      pieces: ajustement.pieces.map((piece) =>
+        piece.repere === repere ? { ...piece, retiree: !piece.retiree } : piece
+      ),
+    });
+  }
 
   if (enAttente && ajustement !== null) {
+    const retenues = piecesRetenues(ajustement.pieces);
+
     return (
       <ThemedView type="backgroundElement" style={styles.card}>
-        <ThemedText type="smallBold">Ajuster le créneau</ThemedText>
+        <ThemedText type="smallBold">Ajuster le camion</ThemedText>
 
         <ThemedView type="backgroundElement" style={styles.ajustChamps}>
           <ThemedView type="backgroundElement" style={styles.ajustChamp}>
@@ -58,12 +79,51 @@ function DemandeCard({ demande }: { demande: Demande }) {
           </ThemedView>
         </ThemedView>
 
+        <ThemedView type="backgroundElement" style={styles.ajustChargement}>
+          <ThemedText type="small" themeColor="textSecondary">
+            Chargement — touchez une pièce pour la retirer ou la remettre
+          </ThemedText>
+
+          <ThemedView type="backgroundElement" style={styles.piecesListe}>
+            {ajustement.pieces.map((piece) => (
+              <Pressable
+                key={piece.repere}
+                onPress={() => basculerPiece(piece.repere)}
+                style={({ pressed }) => [
+                  styles.pieceChip,
+                  { backgroundColor: theme.backgroundSelected },
+                  piece.retiree && styles.pieceRetiree,
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText
+                  type="smallBold"
+                  themeColor={piece.retiree ? 'textSecondary' : 'text'}
+                  style={piece.retiree && styles.texteBarre}>
+                  {piece.repere} · {formatPoids(piece.poids)}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </ThemedView>
+
+          <ThemedText type="smallBold">
+            Au chargement : {retenues.length} pièce{retenues.length > 1 ? 's' : ''} ·{' '}
+            {formatPoids(totalPoids(ajustement.pieces))}
+          </ThemedText>
+
+          {retenues.length === 0 && (
+            <ThemedText type="small" themeColor="textSecondary">
+              Gardez au moins une pièce, ou refusez la demande.
+            </ThemedText>
+          )}
+        </ThemedView>
+
         <ThemedView type="backgroundElement" style={styles.actionsRow}>
           <Pressable
             onPress={() => {
               validerAvecCreneau(demande.id, {
                 date: ajustement.date.trim(),
                 heure: ajustement.heure.trim(),
+                pieces: ajustement.pieces,
               });
               setAjustement(null);
             }}
@@ -133,16 +193,25 @@ function DemandeCard({ demande }: { demande: Demande }) {
             {demande.pieces.map((piece) => (
               <ThemedView
                 key={piece.repere}
-                style={[styles.pieceChip, { backgroundColor: theme.backgroundSelected }]}>
-                <ThemedText type="smallBold">
+                style={[
+                  styles.pieceChip,
+                  { backgroundColor: theme.backgroundSelected },
+                  piece.retiree && styles.pieceRetiree,
+                ]}>
+                <ThemedText
+                  type="smallBold"
+                  themeColor={piece.retiree ? 'textSecondary' : 'text'}
+                  style={piece.retiree && styles.texteBarre}>
                   {piece.repere} · {formatPoids(piece.poids)}
                 </ThemedText>
               </ThemedView>
             ))}
           </ThemedView>
           <ThemedText type="small" themeColor="textSecondary">
-            {demande.pieces.length} pièce{demande.pieces.length > 1 ? 's' : ''} ·{' '}
+            {piecesRetenues(demande.pieces).length} pièce
+            {piecesRetenues(demande.pieces).length > 1 ? 's' : ''} ·{' '}
             {formatPoids(totalPoids(demande.pieces))} au chargement
+            {nbRetirees > 0 && ` · ${nbRetirees} retirée${nbRetirees > 1 ? 's' : ''}`}
           </ThemedText>
         </>
       )}
@@ -174,7 +243,13 @@ function DemandeCard({ demande }: { demande: Demande }) {
             </Pressable>
 
             <Pressable
-              onPress={() => setAjustement({ date: demande.date, heure: demande.heure })}
+              onPress={() =>
+                setAjustement({
+                  date: demande.date,
+                  heure: demande.heure,
+                  pieces: demande.pieces,
+                })
+              }
               style={({ pressed }) => [
                 styles.actionButton,
                 { backgroundColor: theme.backgroundSelected },
@@ -366,6 +441,16 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.half,
     paddingHorizontal: Spacing.two,
     borderRadius: Spacing.two,
+  },
+  pieceRetiree: {
+    opacity: 0.55,
+  },
+  texteBarre: {
+    textDecorationLine: 'line-through',
+  },
+  ajustChargement: {
+    gap: Spacing.two,
+    marginTop: Spacing.one,
   },
   actionButton: {
     flexDirection: 'row',

@@ -8,6 +8,12 @@ export type PieceChargee = {
   repere: string;
   /** Poids en tonnes. */
   poids: number;
+  /**
+   * Pièce que tu as sortie du chargement avant de valider. Elle reste dans
+   * la liste pour que le client sache qu'elle n'est pas partie, mais ne
+   * compte plus dans le total du camion.
+   */
+  retiree?: boolean;
 };
 
 /** Un camion qui arrive à une date et une heure, chargé de plusieurs pièces. */
@@ -83,6 +89,7 @@ function normaliserPieces(valeur: unknown): PieceChargee[] {
       {
         repere: p.repere,
         poids: typeof p.poids === 'number' && Number.isFinite(p.poids) ? p.poids : 0,
+        retiree: p.retiree === true ? true : undefined,
       },
     ];
   });
@@ -165,20 +172,28 @@ export function addDemande(input: {
 }
 
 /**
- * Cale la demande sur le créneau qui t'arrange et la valide dans la foulée.
+ * Cale la demande sur le créneau et le chargement qui t'arrangent, et la
+ * valide dans la foulée.
+ *
  * Le créneau demandé par le client est mémorisé au premier ajustement
- * seulement, pour qu'un second ajustement ne l'efface pas.
+ * seulement, pour qu'un second ajustement ne l'efface pas. Les pièces que tu
+ * sors du camion sont marquées comme retirées plutôt que supprimées.
  */
-export function validerAvecCreneau(id: string, creneau: { date: string; heure: string }) {
+export function validerAvecCreneau(
+  id: string,
+  ajustement: { date: string; heure: string; pieces: PieceChargee[] }
+) {
   const demandes = etat.demandes.map((demande) => {
     if (demande.id !== id) return demande;
-    const ajuste = creneau.date !== demande.date || creneau.heure !== demande.heure;
+    const creneauAjuste =
+      ajustement.date !== demande.date || ajustement.heure !== demande.heure;
     return {
       ...demande,
-      date: creneau.date,
-      heure: creneau.heure,
-      dateInitiale: demande.dateInitiale ?? (ajuste ? demande.date : undefined),
-      heureInitiale: demande.heureInitiale ?? (ajuste ? demande.heure : undefined),
+      date: ajustement.date,
+      heure: ajustement.heure,
+      pieces: ajustement.pieces,
+      dateInitiale: demande.dateInitiale ?? (creneauAjuste ? demande.date : undefined),
+      heureInitiale: demande.heureInitiale ?? (creneauAjuste ? demande.heure : undefined),
       statut: 'Validée' as const,
     };
   });

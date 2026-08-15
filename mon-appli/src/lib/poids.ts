@@ -30,9 +30,20 @@ export function formatPoids(tonnes: number): string {
   return `${String(arrondi).replace('.', ',')} t`;
 }
 
-/** Poids total d'un chargement, en tonnes. */
-export function totalPoids(pieces: { poids: number }[]): number {
+type Chargeable = { poids: number; retiree?: boolean };
+
+/**
+ * Pièces effectivement emportées : celles que tu as retirées du chargement
+ * restent dans la liste pour mémoire, mais ne partent pas avec le camion.
+ */
+export function piecesRetenues<T extends Chargeable>(pieces: T[]): T[] {
+  return pieces.filter((piece) => !piece.retiree);
+}
+
+/** Poids total réellement chargé, en tonnes. */
+export function totalPoids(pieces: Chargeable[]): number {
   // Les centièmes sont recalés après la somme : additionner des décimaux
   // laisse sinon apparaître des résultats du type 10,299999999999999.
-  return Math.round(pieces.reduce((total, piece) => total + piece.poids, 0) * 100) / 100;
+  const somme = piecesRetenues(pieces).reduce((total, piece) => total + piece.poids, 0);
+  return Math.round(somme * 100) / 100;
 }
