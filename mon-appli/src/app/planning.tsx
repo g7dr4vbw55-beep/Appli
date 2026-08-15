@@ -7,6 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { creneauxLivraison, type CreneauLivraison, type CreneauStatut } from '@/data/planning-data';
 import { useTheme } from '@/hooks/use-theme';
+import { formatDateFr } from '@/lib/dates';
 
 const statutTone: Record<CreneauStatut, StatusTone> = {
   Confirmé: 'positive',
@@ -19,7 +20,7 @@ function CreneauCard({ creneau }: { creneau: CreneauLivraison }) {
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedView type="backgroundElement" style={styles.cardHeader}>
         <ThemedText type="smallBold">
-          {creneau.date} · {creneau.heure}
+          {formatDateFr(creneau.date)} · {creneau.heure}
         </ThemedText>
         <StatusBadge label={creneau.statut} tone={statutTone[creneau.statut]} />
       </ThemedView>

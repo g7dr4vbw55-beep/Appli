@@ -14,6 +14,7 @@ import {
   type Demande,
 } from '@/data/demandes-store';
 import { useTheme } from '@/hooks/use-theme';
+import { formatDateFr } from '@/lib/dates';
 
 function DemandeCard({ demande }: { demande: Demande }) {
   const theme = useTheme();
@@ -102,7 +103,7 @@ function DemandeCard({ demande }: { demande: Demande }) {
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedView type="backgroundElement" style={styles.cardHeader}>
         <ThemedText type="smallBold">
-          {demande.date} · {demande.heure}
+          {formatDateFr(demande.date)} · {demande.heure}
         </ThemedText>
         {!enAttente && (
           <StatusBadge
@@ -114,7 +115,7 @@ function DemandeCard({ demande }: { demande: Demande }) {
 
       {creneauAjuste && (
         <ThemedText type="small" themeColor="textSecondary">
-          Demandé initialement : {demande.dateInitiale ?? demande.date} ·{' '}
+          Demandé initialement : {formatDateFr(demande.dateInitiale ?? demande.date)} ·{' '}
           {demande.heureInitiale ?? demande.heure}
         </ThemedText>
       )}
