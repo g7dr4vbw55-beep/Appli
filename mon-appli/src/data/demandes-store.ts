@@ -103,10 +103,12 @@ export function setDemandeStatut(id: string, statut: DemandeStatut) {
   persister(demandes);
 }
 
-export function useDemandesEnAttente() {
+export function useDemandes() {
   const { demandes, chargement } = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   return {
-    demandes: demandes.filter((demande) => demande.statut === 'En attente'),
+    enAttente: demandes.filter((demande) => demande.statut === 'En attente'),
+    // Les plus récemment reçues en premier : l'historique se lit de haut en bas.
+    traitees: demandes.filter((demande) => demande.statut !== 'En attente').reverse(),
     chargement,
   };
 }
