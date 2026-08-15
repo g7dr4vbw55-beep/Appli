@@ -15,6 +15,7 @@ import {
 } from '@/data/demandes-store';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDateFr } from '@/lib/dates';
+import { formatPoids, totalPoids } from '@/lib/poids';
 
 function DemandeCard({ demande }: { demande: Demande }) {
   const theme = useTheme();
@@ -127,15 +128,23 @@ function DemandeCard({ demande }: { demande: Demande }) {
       )}
 
       {demande.pieces.length > 0 && (
-        <ThemedView type="backgroundElement" style={styles.piecesListe}>
-          {demande.pieces.map((repere) => (
-            <ThemedView
-              key={repere}
-              style={[styles.pieceChip, { backgroundColor: theme.backgroundSelected }]}>
-              <ThemedText type="smallBold">{repere}</ThemedText>
-            </ThemedView>
-          ))}
-        </ThemedView>
+        <>
+          <ThemedView type="backgroundElement" style={styles.piecesListe}>
+            {demande.pieces.map((piece) => (
+              <ThemedView
+                key={piece.repere}
+                style={[styles.pieceChip, { backgroundColor: theme.backgroundSelected }]}>
+                <ThemedText type="smallBold">
+                  {piece.repere} · {formatPoids(piece.poids)}
+                </ThemedText>
+              </ThemedView>
+            ))}
+          </ThemedView>
+          <ThemedText type="small" themeColor="textSecondary">
+            {demande.pieces.length} pièce{demande.pieces.length > 1 ? 's' : ''} ·{' '}
+            {formatPoids(totalPoids(demande.pieces))} au chargement
+          </ThemedText>
+        </>
       )}
 
       {demande.commentaire.length > 0 && (

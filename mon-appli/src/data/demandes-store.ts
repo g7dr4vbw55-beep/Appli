@@ -3,6 +3,13 @@ import { useSyncExternalStore } from 'react';
 
 export type DemandeStatut = 'En attente' | 'Validée' | 'Refusée';
 
+/** Une pièce chargée dans le camion, avec son poids en tonnes. */
+export type PieceChargee = {
+  repere: string;
+  /** Poids en tonnes. */
+  poids: number;
+};
+
 /** Un camion qui arrive à une date et une heure, chargé de plusieurs pièces. */
 export type Demande = {
   id: string;
@@ -11,8 +18,7 @@ export type Demande = {
   /** Date et heure d'arrivée du camion. */
   date: string;
   heure: string;
-  /** Repères des pièces chargées : PT118, ESC24, LG09… */
-  pieces: string[];
+  pieces: PieceChargee[];
   commentaire: string;
   statut: DemandeStatut;
   /** Créneau demandé par le client, conservé dès que tu l'as ajusté. */
@@ -60,6 +66,29 @@ async function persister(demandes: Demande[]) {
 const texte = (valeur: unknown) => (typeof valeur === 'string' ? valeur : '');
 
 /**
+ * Relit la liste des pièces d'une demande enregistrée.
+ *
+ * Avant l'ajout du poids, une pièce n'était qu'un repère ("PT118"). Ces
+ * pièces sont conservées avec un poids de 0 : le repère reste, et le total
+ * du camion signale de lui-même qu'il reste des poids à renseigner.
+ */
+function normaliserPieces(valeur: unknown): PieceChargee[] {
+  if (!Array.isArray(valeur)) return [];
+  return valeur.flatMap((piece): PieceChargee[] => {
+    if (typeof piece === 'string') return [{ repere: piece, poids: 0 }];
+    if (typeof piece !== 'object' || piece === null) return [];
+    const p = piece as Record<string, unknown>;
+    if (typeof p.repere !== 'string') return [];
+    return [
+      {
+        repere: p.repere,
+        poids: typeof p.poids === 'number' && Number.isFinite(p.poids) ? p.poids : 0,
+      },
+    ];
+  });
+}
+
+/**
  * Remet une demande enregistrée à la forme attendue par l'appli d'aujourd'hui.
  *
  * Les demandes créées avant l'ajout du client, du chantier et des pièces n'ont
@@ -81,7 +110,7 @@ function normaliserDemande(valeur: unknown): Demande | null {
     chantier: texte(d.chantier),
     date: texte(d.date),
     heure: texte(d.heure),
-    pieces: Array.isArray(d.pieces) ? d.pieces.filter((p): p is string => typeof p === 'string') : [],
+    pieces: normaliserPieces(d.pieces),
     commentaire: texte(d.commentaire),
     statut,
     dateInitiale: typeof d.dateInitiale === 'string' ? d.dateInitiale : undefined,
@@ -115,7 +144,7 @@ export function addDemande(input: {
   chantier: string;
   date: string;
   heure: string;
-  pieces: string[];
+  pieces: PieceChargee[];
   commentaire: string;
 }) {
   const demandes = [

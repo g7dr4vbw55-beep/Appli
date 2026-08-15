@@ -5,8 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { addDemande } from '@/data/demandes-store';
+import { addDemande, type PieceChargee } from '@/data/demandes-store';
 import { useTheme } from '@/hooks/use-theme';
+import { analyserPoids, formatPoids, totalPoids } from '@/lib/poids';
 
 export default function ProposerScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -32,8 +33,9 @@ export default function ProposerScreen() {
   const [chantier, setChantier] = useState('');
   const [date, setDate] = useState('');
   const [heure, setHeure] = useState('');
-  const [pieces, setPieces] = useState<string[]>([]);
-  const [pieceEnCours, setPieceEnCours] = useState('');
+  const [pieces, setPieces] = useState<PieceChargee[]>([]);
+  const [repereEnCours, setRepereEnCours] = useState('');
+  const [poidsEnCours, setPoidsEnCours] = useState('');
   const [commentaire, setCommentaire] = useState('');
   const [confirmation, setConfirmation] = useState(false);
 
@@ -51,19 +53,23 @@ export default function ProposerScreen() {
     };
   }
 
+  const repereValide =
+    repereEnCours.trim().length > 0 &&
+    !pieces.some((p) => p.repere === repereEnCours.trim());
+  const poidsValide = analyserPoids(poidsEnCours) !== null;
+  const pieceAjoutable = repereValide && poidsValide;
+
   function ajouterPiece() {
-    const repere = pieceEnCours.trim();
-    if (repere.length === 0 || pieces.includes(repere)) {
-      setPieceEnCours('');
-      return;
-    }
-    setPieces([...pieces, repere]);
-    setPieceEnCours('');
+    const poids = analyserPoids(poidsEnCours);
+    if (!repereValide || poids === null) return;
+    setPieces([...pieces, { repere: repereEnCours.trim(), poids }]);
+    setRepereEnCours('');
+    setPoidsEnCours('');
     setConfirmation(false);
   }
 
   function retirerPiece(repere: string) {
-    setPieces(pieces.filter((p) => p !== repere));
+    setPieces(pieces.filter((p) => p.repere !== repere));
     setConfirmation(false);
   }
 
@@ -82,7 +88,8 @@ export default function ProposerScreen() {
     setDate('');
     setHeure('');
     setPieces([]);
-    setPieceEnCours('');
+    setRepereEnCours('');
+    setPoidsEnCours('');
     setCommentaire('');
     setConfirmation(true);
   }
@@ -150,52 +157,72 @@ export default function ProposerScreen() {
             <ThemedText type="smallBold">Pièces chargées</ThemedText>
             <ThemedView type="backgroundElement" style={styles.pieceSaisie}>
               <TextInput
-                value={pieceEnCours}
-                onChangeText={setPieceEnCours}
-                onSubmitEditing={ajouterPiece}
-                returnKeyType="done"
-                placeholder="Repère (PT118, ESC24…)"
+                value={repereEnCours}
+                onChangeText={setRepereEnCours}
+                placeholder="Repère (PT118…)"
                 placeholderTextColor={theme.textSecondary}
                 style={[
                   styles.input,
-                  styles.pieceInput,
+                  styles.repereInput,
+                  { color: theme.text, borderColor: theme.backgroundSelected },
+                ]}
+              />
+              <TextInput
+                value={poidsEnCours}
+                onChangeText={setPoidsEnCours}
+                onSubmitEditing={ajouterPiece}
+                returnKeyType="done"
+                keyboardType="decimal-pad"
+                placeholder="t"
+                placeholderTextColor={theme.textSecondary}
+                style={[
+                  styles.input,
+                  styles.poidsInput,
                   { color: theme.text, borderColor: theme.backgroundSelected },
                 ]}
               />
               <Pressable
                 onPress={ajouterPiece}
-                disabled={pieceEnCours.trim().length === 0}
+                disabled={!pieceAjoutable}
                 style={({ pressed }) => [
                   styles.ajouterPiece,
                   { backgroundColor: theme.backgroundSelected },
-                  pieceEnCours.trim().length === 0 && styles.disabled,
-                  pressed && styles.pressed,
+                  !pieceAjoutable && styles.disabled,
+                  pressed && pieceAjoutable && styles.pressed,
                 ]}>
                 <ThemedText type="smallBold">Ajouter</ThemedText>
               </Pressable>
             </ThemedView>
 
             {pieces.length > 0 ? (
-              <ThemedView type="backgroundElement" style={styles.piecesListe}>
-                {pieces.map((repere) => (
-                  <Pressable
-                    key={repere}
-                    onPress={() => retirerPiece(repere)}
-                    style={({ pressed }) => [
-                      styles.pieceChip,
-                      { backgroundColor: theme.backgroundSelected },
-                      pressed && styles.pressed,
-                    ]}>
-                    <ThemedText type="smallBold">{repere}</ThemedText>
-                    <ThemedText type="smallBold" themeColor="textSecondary">
-                      ✕
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </ThemedView>
+              <>
+                <ThemedView type="backgroundElement" style={styles.piecesListe}>
+                  {pieces.map((piece) => (
+                    <Pressable
+                      key={piece.repere}
+                      onPress={() => retirerPiece(piece.repere)}
+                      style={({ pressed }) => [
+                        styles.pieceChip,
+                        { backgroundColor: theme.backgroundSelected },
+                        pressed && styles.pressed,
+                      ]}>
+                      <ThemedText type="smallBold">
+                        {piece.repere} · {formatPoids(piece.poids)}
+                      </ThemedText>
+                      <ThemedText type="smallBold" themeColor="textSecondary">
+                        ✕
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </ThemedView>
+                <ThemedText type="smallBold">
+                  Total : {pieces.length} pièce{pieces.length > 1 ? 's' : ''} ·{' '}
+                  {formatPoids(totalPoids(pieces))}
+                </ThemedText>
+              </>
             ) : (
               <ThemedText type="small" themeColor="textSecondary">
-                Ajoutez au moins une pièce. Touchez une pièce pour la retirer.
+                Ajoutez au moins une pièce avec son poids. Touchez une pièce pour la retirer.
               </ThemedText>
             )}
           </ThemedView>
@@ -284,8 +311,12 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     alignItems: 'stretch',
   },
-  pieceInput: {
+  repereInput: {
     flex: 1,
+  },
+  poidsInput: {
+    width: 64,
+    textAlign: 'center',
   },
   ajouterPiece: {
     justifyContent: 'center',

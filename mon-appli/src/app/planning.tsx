@@ -8,6 +8,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { creneauxLivraison, type CreneauLivraison, type CreneauStatut } from '@/data/planning-data';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDateFr } from '@/lib/dates';
+import { formatPoids, totalPoids } from '@/lib/poids';
 
 const statutTone: Record<CreneauStatut, StatusTone> = {
   Confirmé: 'positive',
@@ -32,17 +33,20 @@ function CreneauCard({ creneau }: { creneau: CreneauLivraison }) {
       </ThemedText>
 
       <ThemedView type="backgroundElement" style={styles.piecesListe}>
-        {creneau.pieces.map((repere) => (
+        {creneau.pieces.map((piece) => (
           <ThemedView
-            key={repere}
+            key={piece.repere}
             style={[styles.pieceChip, { backgroundColor: theme.backgroundSelected }]}>
-            <ThemedText type="smallBold">{repere}</ThemedText>
+            <ThemedText type="smallBold">
+              {piece.repere} · {formatPoids(piece.poids)}
+            </ThemedText>
           </ThemedView>
         ))}
       </ThemedView>
 
       <ThemedText type="small" themeColor="textSecondary">
-        {creneau.pieces.length} pièce{creneau.pieces.length > 1 ? 's' : ''} au chargement
+        {creneau.pieces.length} pièce{creneau.pieces.length > 1 ? 's' : ''} ·{' '}
+        {formatPoids(totalPoids(creneau.pieces))} au chargement
       </ThemedText>
     </ThemedView>
   );
