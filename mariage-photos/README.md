@@ -191,6 +191,34 @@ Rendez-vous sur `https://votre-url-vercel.vercel.app/<VITE_ADMIN_PATH>` (remplac
 
 Cette URL n'est pas devinable si vous avez choisi une valeur aléatoire, mais gardez-la privée et ne la partagez qu'avec les personnes de confiance.
 
+### Mot de passe administrateur oublié
+
+Il n'y a rien à récupérer : le mot de passe n'est stocké nulle part, il est simplement comparé à la variable `ADMIN_PASSWORD`. Il suffit d'en définir un nouveau.
+
+1. Vercel > votre projet > **Settings** > **Environment Variables**.
+2. En face de `ADMIN_PASSWORD`, cliquez sur **Edit**, saisissez le nouveau mot de passe, enregistrez.
+3. Onglet **Deployments** > ouvrez le déploiement le plus récent > menu **⋯** > **Redeploy**. Cette étape est indispensable : sans nouveau déploiement, Vercel continue d'utiliser l'ancienne valeur.
+
+Les photos, les commentaires et le code d'accès des invités ne sont pas affectés.
+
+### Que faire si la connexion à l'administration échoue
+
+L'écran de connexion indique la cause précise :
+
+| Message | Ce qu'il faut faire |
+|---|---|
+| « Mot de passe incorrect. » | Le mot de passe ne correspond pas. Suivez la procédure ci-dessus pour en définir un nouveau. |
+| « Aucun mot de passe n'est défini sur le serveur… » | La variable `ADMIN_PASSWORD` manque dans Vercel. Ajoutez-la, puis relancez un déploiement. |
+| « La partie serveur de l'administration n'est pas déployée… » | Le **Root Directory** du projet Vercel ne pointe pas sur `mariage-photos`. Corrigez-le dans Settings > General, puis relancez un déploiement. |
+
+### Si une clé ou un mot de passe a été exposé par erreur
+
+Si une valeur secrète s'est retrouvée dans un fichier publié (par exemple `.env.example`, qui est suivi par git), la supprimer ne suffit pas : l'historique du dépôt la conserve. Il faut la remplacer.
+
+- **Clé secrète Supabase** : dans Supabase > **API Keys**, utilisez **Rotate** sur la secret key. L'ancienne cesse immédiatement de fonctionner. Reportez la nouvelle valeur dans Vercel, puis relancez un déploiement.
+- **Mot de passe administrateur** : suivez la procédure « Mot de passe administrateur oublié » ci-dessus.
+- La clé *publishable* n'a pas besoin d'être changée : elle est conçue pour être visible dans le navigateur.
+
 ---
 
 ## Personnaliser l'application
