@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #1a1425;
+  color: #f5f1fa;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Empêche le double-tap zoom intempestif tout en gardant le zoom accessibilité */
+button,
+a {
+  touch-action: manipulation;
+}
+
+/* Barre de progression illisible en soirée si trop discrète : on force un contraste fort */
+::selection {
+  background-color: #d4a24c;
+  color: #1a1425;
+}

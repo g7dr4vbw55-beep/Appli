@@ -1,0 +1,32 @@
+{
+  "name": "Notre mariage, 22 août 2026",
+  "short_name": "Mariage 2026",
+  "description": "Merci d'être des nôtres ! Partagez vos plus belles photos de la soirée, on a hâte de tout revoir.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1425",
+  "theme_color": "#2a1f3d",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

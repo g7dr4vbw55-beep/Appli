@@ -1,0 +1,23 @@
+/**
+ * Configuration unique du mariage.
+ * Modifiez ces valeurs pour personnaliser l'application sans toucher au reste du code.
+ */
+const weddingConfig = {
+  /** Titre affiché sur l'écran d'accueil et dans le titre de l'onglet du navigateur */
+  eventTitle: 'Notre mariage, 22 août 2026',
+
+  /** Petite phrase d'accueil affichée sous le titre */
+  welcomeMessage:
+    'Merci d\'être des nôtres ! Partagez vos plus belles photos de la soirée, on a hâte de tout revoir.',
+
+  /** Nom court utilisé pour la PWA (icône sur l'écran d'accueil) */
+  shortName: 'Mariage 2026',
+
+  /** Couleur principale de la PWA (thème de la barre de navigation mobile) */
+  themeColor: '#2a1f3d',
+
+  /** Couleur de fond de l'écran de démarrage PWA */
+  backgroundColor: '#1a1425',
+} as const
+
+export default weddingConfig
