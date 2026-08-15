@@ -4,14 +4,14 @@
  */
 const weddingConfig = {
   /** Titre affiché sur l'écran d'accueil et dans le titre de l'onglet du navigateur */
-  eventTitle: 'Notre mariage, 22 août 2026',
+  eventTitle: 'Sofiane & Morgane, 22 août 2026',
 
   /** Petite phrase d'accueil affichée sous le titre */
   welcomeMessage:
-    'Merci d\'être des nôtres ! Partagez vos plus belles photos de la soirée, on a hâte de tout revoir.',
+    'Merci d\'être là pour ce grand jour ! Partagez vos plus belles photos de la soirée, on a hâte de tout revoir.',
 
   /** Nom court utilisé pour la PWA (icône sur l'écran d'accueil) */
-  shortName: 'Mariage 2026',
+  shortName: 'Sofiane & Morgane',
 
   /** Couleur principale de la PWA (thème de la barre de navigation mobile) */
   themeColor: '#1e0d22',

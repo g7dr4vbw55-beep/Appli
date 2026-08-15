@@ -16,8 +16,11 @@ export default function Entete({ prenom, onAide }: Props) {
           />
         </svg>
         <div className="min-w-0 flex-1">
+          {/* Nom court plutôt que titre complet : la barre est étroite, et
+              le titre entier y serait tronqué en plein milieu. Il reste
+              affiché sur les écrans d'entrée et sur l'affiche. */}
           <h1 className="truncate text-base font-bold leading-tight text-creme">
-            {weddingConfig.eventTitle}
+            {weddingConfig.shortName}
           </h1>
           <p className="truncate text-sm text-mauve-400">Bonjour {prenom}</p>
         </div>
