@@ -9,7 +9,7 @@ import {
   supprimerPhoto,
   telechargerArchiveZip,
   verifierMotDePasse,
-  type ResultatConnexion,
+  type CodeConnexion,
 } from '../lib/adminApi'
 import type { Commentaire, PhotoAvecUrl } from '../lib/types'
 
@@ -23,13 +23,15 @@ export default function Admin() {
   return <PanneauAdmin motDePasse={motDePasse} onDeconnexion={() => setMotDePasse(null)} />
 }
 
-const MESSAGES_ERREUR: Record<Exclude<ResultatConnexion, 'ok'>, string> = {
+const MESSAGES_ERREUR: Record<Exclude<CodeConnexion, 'ok'>, string> = {
   'mot-de-passe-incorrect': 'Mot de passe incorrect.',
   'mot-de-passe-non-configure':
     "Aucun mot de passe n'est défini sur le serveur. Ajoutez la variable ADMIN_PASSWORD dans Vercel (Settings puis Environment Variables), puis relancez un déploiement.",
   'fonctions-absentes':
     "La partie serveur de l'administration n'est pas déployée. Dans Vercel, vérifiez que le \"Root Directory\" du projet est bien mariage-photos, puis relancez un déploiement.",
-  'erreur-reseau': 'Impossible de vérifier le mot de passe. Vérifiez votre connexion et réessayez.',
+  'serveur-en-erreur':
+    "Le serveur a renvoyé une erreur. Consultez l'onglet Logs du déploiement dans Vercel pour en voir la cause.",
+  'erreur-reseau': 'Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.',
 }
 
 function EcranConnexion({ onConnecte }: { onConnecte: (mdp: string) => void }) {
@@ -44,12 +46,13 @@ function EcranConnexion({ onConnecte }: { onConnecte: (mdp: string) => void }) {
     const resultat = await verifierMotDePasse(saisie)
     setVerification(false)
 
-    if (resultat === 'ok') {
+    if (resultat.code === 'ok') {
       setMotDePasseSession(saisie)
       onConnecte(saisie)
       return
     }
-    setErreur(MESSAGES_ERREUR[resultat])
+    const message = MESSAGES_ERREUR[resultat.code]
+    setErreur(resultat.detail ? `${message} (${resultat.detail})` : message)
   }
 
   return (
