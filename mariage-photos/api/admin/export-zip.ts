@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ZipArchive } from 'archiver'
-import { verifierMotDePasseAdmin } from '../_lib/adminAuth'
-import { getSupabaseAdmin, BUCKET_NAME } from '../_lib/supabaseAdmin'
+import { verifierMotDePasseAdmin } from '../_lib/adminAuth.js'
+import { getSupabaseAdmin, BUCKET_NAME } from '../_lib/supabaseAdmin.js'
 
 export const config = {
   maxDuration: 60,
