@@ -1,6 +1,7 @@
 import { FlatList, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ImportTableur } from '@/components/import-tableur';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -83,6 +84,7 @@ export default function PlanningScreen() {
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="subtitle">Planning</ThemedText>
           <ThemedText themeColor="textSecondary">Créneaux de livraison à venir</ThemedText>
+          <ImportTableur />
         </ThemedView>
       }
       renderItem={({ item }) => <CreneauCard creneau={item} />}
