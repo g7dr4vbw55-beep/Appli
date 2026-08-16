@@ -21,13 +21,14 @@ const defis: Defi[] = [
   { id: 'miroir', intitule: 'Une photo devant le miroir de bienvenue', ordre: 2 },
   { id: 'punch', intitule: 'Un verre rempli à la fontaine à punch', ordre: 3 },
   { id: 'table', intitule: 'Un selfie avec toute ta table', ordre: 4 },
-  { id: 'maries-surpris', intitule: 'Les mariés surpris sans qu\'ils te voient', ordre: 5 },
-  { id: 'discours', intitule: 'Un témoin en plein discours', ordre: 6 },
-  { id: 'jeune-agee', intitule: 'La plus jeune et la plus âgée de la soirée sur la même photo', ordre: 7 },
-  { id: 'mr-mrs', intitule: 'Une photo pendant le Mr & Mrs', ordre: 8 },
-  { id: 'ouverture-bal', intitule: 'L\'ouverture du bal', ordre: 9 },
-  { id: 'rencontre', intitule: 'Deux invités qui ne se connaissaient pas avant aujourd\'hui', ordre: 10 },
-  { id: 'dernier-debout', intitule: 'Le dernier debout sur la piste', ordre: 11 },
+  { id: 'lunettes', intitule: 'Prendre un selfie avec les lunettes personnalisées M & S', ordre: 5 },
+  { id: 'maries-surpris', intitule: 'Les mariés surpris sans qu\'ils te voient', ordre: 6 },
+  { id: 'discours', intitule: 'Un témoin en plein discours', ordre: 7 },
+  { id: 'jeune-agee', intitule: 'La plus jeune et la plus âgée de la soirée sur la même photo', ordre: 8 },
+  { id: 'mr-mrs', intitule: 'Une photo pendant le Mr & Mrs', ordre: 9 },
+  { id: 'ouverture-bal', intitule: 'L\'ouverture du bal', ordre: 10 },
+  { id: 'rencontre', intitule: 'Deux invités qui ne se connaissaient pas avant aujourd\'hui', ordre: 11 },
+  { id: 'dernier-debout', intitule: 'Le dernier debout sur la piste', ordre: 12 },
 ]
 
 /** Défis triés, tels qu'ils doivent être affichés. */
