@@ -6,13 +6,14 @@ import FileEnvoi from '../components/FileEnvoi'
 import Galerie from '../components/Galerie'
 import Defis from '../components/Defis'
 import Presentation from '../components/Presentation'
+import Remerciements from '../components/Remerciements'
 import PhotoPleinEcran from '../components/PhotoPleinEcran'
 import { useUploadQueue } from '../lib/useUploadQueue'
 import { getDefisAccomplis } from '../lib/localPrefs'
 import { defisTries } from '../../defis.config'
 import type { PhotoAvecUrl } from '../lib/types'
 
-type Onglet = 'album' | 'defis'
+type Onglet = 'album' | 'defis' | 'merci'
 
 export default function Accueil() {
   return <PorteAcces>{(prenom) => <ContenuGalerie prenom={prenom} />}</PorteAcces>
@@ -51,7 +52,7 @@ function ContenuGalerie({ prenom }: { prenom: string }) {
         totalDefis={defisTries.length}
       />
 
-      {onglet === 'album' ? (
+      {onglet === 'album' && (
         <>
           <div className="mx-auto max-w-2xl px-4 pb-5 pt-4">
             <BoutonAjoutPhotos onFichiers={(f) => ajouterFichiers(f)} />
@@ -66,7 +67,9 @@ function ContenuGalerie({ prenom }: { prenom: string }) {
             onChangerFiltre={setFiltreDefi}
           />
         </>
-      ) : (
+      )}
+
+      {onglet === 'defis' && (
         <>
           <FileEnvoi elements={elements} onRelancer={relancer} onRetirer={retirer} />
 
@@ -82,6 +85,8 @@ function ContenuGalerie({ prenom }: { prenom: string }) {
           </div>
         </>
       )}
+
+      {onglet === 'merci' && <Remerciements />}
 
       {photoOuverte && (
         <PhotoPleinEcran photo={photoOuverte} prenom={prenom} onFermer={() => setPhotoOuverte(null)} />
@@ -120,12 +125,15 @@ function Onglets({
           Défis
           <span
             className={[
-              'ml-2 rounded-full px-2 py-0.5 text-xs font-bold',
+              'ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-bold',
               actif === 'defis' ? 'bg-prune-950/25 text-prune-950' : 'bg-prune-800 text-rosee-300',
             ].join(' ')}
           >
             {nombreAccomplis}/{totalDefis}
           </span>
+        </BoutonOnglet>
+        <BoutonOnglet actif={actif === 'merci'} onClick={() => onChanger('merci')}>
+          Merci
         </BoutonOnglet>
       </div>
     </div>
