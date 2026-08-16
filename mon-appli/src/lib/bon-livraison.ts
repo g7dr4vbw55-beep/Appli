@@ -85,13 +85,19 @@ export function htmlBonLivraison(demande: Demande, numero: string, emisLe = new 
   .commentaire h2 { margin: 0 0 4px; font-size: 8.5pt; text-transform: uppercase;
                     letter-spacing: 1px; color: #555; font-weight: 700; }
 
-  .signatures { display: flex; gap: 12px; margin-top: 22px; }
-  .signature { flex: 1; border: 1px solid #bbb; padding: 10px 12px; min-height: 105px; }
+  .signatures { display: flex; gap: 10px; margin-top: 22px; }
+  .signature { flex: 1; border: 1px solid #bbb; padding: 9px 11px 8px;
+               display: flex; flex-direction: column; }
+  .signature .rang { display: inline-block; width: 15px; height: 15px; line-height: 15px;
+                     text-align: center; background: #111; color: #fff; border-radius: 50%;
+                     font-size: 8pt; font-weight: 700; margin-bottom: 5px; }
   .signature h2 { margin: 0 0 2px; font-size: 8.5pt; text-transform: uppercase;
-                  letter-spacing: 1px; color: #555; font-weight: 700; }
-  .signature .quand { color: #666; font-size: 9pt; }
-  .signature .ligne { margin-top: 34px; border-top: 1px dotted #888;
-                      padding-top: 4px; color: #666; font-size: 8.5pt; }
+                  letter-spacing: 0.8px; color: #333; font-weight: 700; }
+  .signature .quand { color: #666; font-size: 8.5pt; }
+  /* Zone laissée libre pour signer : c'est elle qui donne sa hauteur au cadre. */
+  .signature .espace { flex: 1; min-height: 46px; }
+  .signature .ligne { border-top: 1px dotted #888; padding-top: 3px;
+                      color: #666; font-size: 8pt; }
 
   .pied { margin-top: 16px; border-top: 1px solid #ddd; padding-top: 7px;
           color: #666; font-size: 8.5pt; }
@@ -147,13 +153,24 @@ export function htmlBonLivraison(demande: Demande, numero: string, emisLe = new 
 
   <div class="signatures">
     <div class="signature">
-      <h2>Le chauffeur</h2>
-      <div class="quand">Au départ de l'usine — conforme au chargement</div>
+      <span class="rang">1</span>
+      <h2>${echapper(EMETTEUR.raisonSociale)}</h2>
+      <div class="quand">Au chargement — pièces conformes et complètes</div>
+      <div class="espace"></div>
       <div class="ligne">Nom, date et signature</div>
     </div>
     <div class="signature">
+      <span class="rang">2</span>
+      <h2>Le chauffeur</h2>
+      <div class="quand">Au départ — chargement pris en charge</div>
+      <div class="espace"></div>
+      <div class="ligne">Nom, date et signature</div>
+    </div>
+    <div class="signature">
+      <span class="rang">3</span>
       <h2>Le réceptionnaire</h2>
-      <div class="quand">À l'arrivée sur chantier — conforme à la réception</div>
+      <div class="quand">À l'arrivée — conforme à la réception</div>
+      <div class="espace"></div>
       <div class="ligne">Nom, date et signature</div>
     </div>
   </div>
