@@ -30,6 +30,8 @@ export type Demande = {
   /** Créneau demandé par le client, conservé dès que tu l'as ajusté. */
   dateInitiale?: string;
   heureInitiale?: string;
+  /** Numéro du bon de livraison, attribué à la première édition. */
+  numeroBL?: string;
 };
 
 type EtatDemandes = {
@@ -122,6 +124,7 @@ function normaliserDemande(valeur: unknown): Demande | null {
     statut,
     dateInitiale: typeof d.dateInitiale === 'string' ? d.dateInitiale : undefined,
     heureInitiale: typeof d.heureInitiale === 'string' ? d.heureInitiale : undefined,
+    numeroBL: typeof d.numeroBL === 'string' ? d.numeroBL : undefined,
   };
 }
 
@@ -199,6 +202,43 @@ export function validerAvecCreneau(
   });
   majEtat({ demandes });
   persister(demandes);
+}
+
+/**
+ * Numéro du prochain bon, de la forme BL-2026-0007.
+ *
+ * Le compteur est déduit des bons déjà émis au lieu d'être stocké à part :
+ * une numérotation qui vit dans les données elles-mêmes ne peut pas se
+ * désynchroniser d'elles.
+ */
+function prochainNumeroBL(demandes: Demande[], annee = new Date().getFullYear()): string {
+  const prefixe = `BL-${annee}-`;
+  const dernier = demandes
+    .map((demande) => demande.numeroBL)
+    .filter((numero): numero is string => typeof numero === 'string' && numero.startsWith(prefixe))
+    .map((numero) => Number(numero.slice(prefixe.length)))
+    .filter((rang) => Number.isFinite(rang))
+    .reduce((max, rang) => Math.max(max, rang), 0);
+
+  return `${prefixe}${String(dernier + 1).padStart(4, '0')}`;
+}
+
+/**
+ * Attribue son numéro de bon de livraison à une demande, et le renvoie.
+ *
+ * Le numéro n'est donné qu'une fois : rééditer le bon d'un camion déjà
+ * parti doit redonner le même document, pas en créer un second.
+ */
+export function attribuerNumeroBL(id: string): string | null {
+  const demande = etat.demandes.find((d) => d.id === id);
+  if (!demande) return null;
+  if (demande.numeroBL) return demande.numeroBL;
+
+  const numeroBL = prochainNumeroBL(etat.demandes);
+  const demandes = etat.demandes.map((d) => (d.id === id ? { ...d, numeroBL } : d));
+  majEtat({ demandes });
+  persister(demandes);
+  return numeroBL;
 }
 
 export function setDemandeStatut(id: string, statut: DemandeStatut) {

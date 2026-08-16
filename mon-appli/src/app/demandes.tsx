@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import {
+  attribuerNumeroBL,
   setDemandeStatut,
   useDemandes,
   validerAvecCreneau,
@@ -15,8 +16,30 @@ import {
   type PieceChargee,
 } from '@/data/demandes-store';
 import { useTheme } from '@/hooks/use-theme';
+import { htmlBonLivraison } from '@/lib/bon-livraison';
 import { formatDateFr } from '@/lib/dates';
+import { imprimerDocument } from '@/lib/imprimer';
 import { formatPoids, piecesRetenues, totalPoids } from '@/lib/poids';
+
+/**
+ * Édite le bon de livraison d'un camion validé : PDF à envoyer ou archiver
+ * sur téléphone, dialogue d'impression sur navigateur.
+ */
+async function editerBonLivraison(demande: Demande) {
+  const numero = attribuerNumeroBL(demande.id);
+  if (numero === null) return;
+
+  try {
+    await imprimerDocument(
+      htmlBonLivraison(demande, numero),
+      `Bon de livraison ${numero}`
+    );
+  } catch (error) {
+    // Annuler le dialogue d'impression passe aussi par ici : on ne dérange
+    // pas l'utilisateur avec une alerte pour un geste volontaire.
+    console.warn(`Édition du bon ${numero} interrompue.`, error);
+  }
+}
 
 function DemandeCard({ demande }: { demande: Demande }) {
   const theme = useTheme();
@@ -283,22 +306,43 @@ function DemandeCard({ demande }: { demande: Demande }) {
             </Pressable>
           </>
         ) : (
-          <Pressable
-            onPress={() => setDemandeStatut(demande.id, 'En attente')}
-            style={({ pressed }) => [
-              styles.actionButton,
-              { backgroundColor: theme.backgroundSelected },
-              pressed && styles.pressed,
-            ]}>
-            <SymbolView
-              tintColor={theme.textSecondary}
-              name={{ ios: 'arrow.uturn.backward', android: 'undo', web: 'undo' }}
-              size={14}
-            />
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Remettre en attente
-            </ThemedText>
-          </Pressable>
+          <>
+            {demande.statut === 'Validée' && (
+              <Pressable
+                onPress={() => editerBonLivraison(demande)}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  styles.blButton,
+                  pressed && styles.pressed,
+                ]}>
+                <SymbolView
+                  tintColor="#1D4ED8"
+                  name={{ ios: 'doc.text', android: 'description', web: 'description' }}
+                  size={14}
+                />
+                <ThemedText type="smallBold" style={styles.blText}>
+                  {demande.numeroBL ? `Rééditer ${demande.numeroBL}` : 'Éditer le BL'}
+                </ThemedText>
+              </Pressable>
+            )}
+
+            <Pressable
+              onPress={() => setDemandeStatut(demande.id, 'En attente')}
+              style={({ pressed }) => [
+                styles.actionButton,
+                { backgroundColor: theme.backgroundSelected },
+                pressed && styles.pressed,
+              ]}>
+              <SymbolView
+                tintColor={theme.textSecondary}
+                name={{ ios: 'arrow.uturn.backward', android: 'undo', web: 'undo' }}
+                size={14}
+              />
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Remettre en attente
+              </ThemedText>
+            </Pressable>
+          </>
         )}
       </ThemedView>
     </ThemedView>
@@ -471,6 +515,12 @@ const styles = StyleSheet.create({
   },
   rejectText: {
     color: '#B91C1C',
+  },
+  blButton: {
+    backgroundColor: '#DBEAFE',
+  },
+  blText: {
+    color: '#1D4ED8',
   },
   pressed: {
     opacity: 0.7,
