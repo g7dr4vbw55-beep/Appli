@@ -7,8 +7,10 @@ import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { PanneauSignature } from '@/components/panneau-signature';
 import {
   attribuerNumeroBL,
+  enregistrerSignature,
   setDemandeStatut,
   useDemandes,
   validerAvecCreneau,
@@ -20,6 +22,13 @@ import { htmlBonLivraison } from '@/lib/bon-livraison';
 import { formatDateFr } from '@/lib/dates';
 import { imprimerDocument } from '@/lib/imprimer';
 import { formatPoids, piecesRetenues, totalPoids } from '@/lib/poids';
+import {
+  formatHorodatage,
+  LIBELLES_SIGNATURE,
+  ORDRE_SIGNATURES,
+  prochainSignataire,
+  type RoleSignature,
+} from '@/lib/signatures';
 
 /**
  * Édite le bon de livraison d'un camion validé : PDF à envoyer ou archiver
@@ -49,6 +58,9 @@ function DemandeCard({ demande }: { demande: Demande }) {
     heure: string;
     pieces: PieceChargee[];
   } | null>(null);
+  const [signatureEnCours, setSignatureEnCours] = useState<RoleSignature | null>(null);
+  const signatures = demande.signatures ?? {};
+  const aSigner = prochainSignataire(signatures);
   const creneauAjuste = demande.dateInitiale !== undefined || demande.heureInitiale !== undefined;
   const nbRetirees = demande.pieces.filter((piece) => piece.retiree).length;
 
@@ -66,6 +78,19 @@ function DemandeCard({ demande }: { demande: Demande }) {
         piece.repere === repere ? { ...piece, retiree: !piece.retiree } : piece
       ),
     });
+  }
+
+  if (signatureEnCours !== null) {
+    return (
+      <PanneauSignature
+        role={signatureEnCours}
+        onValider={(signature) => {
+          enregistrerSignature(demande.id, signatureEnCours, signature);
+          setSignatureEnCours(null);
+        }}
+        onAnnuler={() => setSignatureEnCours(null)}
+      />
+    );
   }
 
   if (enAttente && ajustement !== null) {
@@ -243,6 +268,43 @@ function DemandeCard({ demande }: { demande: Demande }) {
         <ThemedText type="small" themeColor="textSecondary">
           {demande.commentaire}
         </ThemedText>
+      )}
+
+      {demande.statut === 'Validée' && (
+        <ThemedView type="backgroundElement" style={styles.signatures}>
+          {ORDRE_SIGNATURES.map((role) => {
+            const signee = signatures[role];
+            const attendue = aSigner === role;
+            return (
+              <ThemedView key={role} type="backgroundElement" style={styles.ligneSignature}>
+                <ThemedText
+                  type="small"
+                  themeColor={signee || attendue ? 'text' : 'textSecondary'}
+                  style={!signee && !attendue && styles.aVenir}>
+                  {signee ? '✓' : LIBELLES_SIGNATURE[role].rang} {LIBELLES_SIGNATURE[role].titre}
+                  {signee ? ` — ${signee.nom}, ${formatHorodatage(signee.signeLe)}` : ''}
+                </ThemedText>
+                {attendue && (
+                  <Pressable
+                    onPress={() => setSignatureEnCours(role)}
+                    style={({ pressed }) => [
+                      styles.boutonSigner,
+                      pressed && styles.pressed,
+                    ]}>
+                    <ThemedText type="smallBold" style={styles.texteSigner}>
+                      Signer
+                    </ThemedText>
+                  </Pressable>
+                )}
+              </ThemedView>
+            );
+          })}
+          {signatures.receptionnaire?.reserves && (
+            <ThemedText type="small" style={styles.reserves}>
+              Réserves : {signatures.receptionnaire.reserves}
+            </ThemedText>
+          )}
+        </ThemedView>
       )}
 
       <ThemedView type="backgroundElement" style={styles.actionsRow}>
@@ -521,6 +583,31 @@ const styles = StyleSheet.create({
   },
   blText: {
     color: '#1D4ED8',
+  },
+  signatures: {
+    gap: Spacing.one,
+    marginTop: Spacing.one,
+  },
+  ligneSignature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  aVenir: {
+    opacity: 0.6,
+  },
+  boutonSigner: {
+    backgroundColor: '#DCFCE7',
+    paddingVertical: Spacing.half,
+    paddingHorizontal: Spacing.two,
+    borderRadius: Spacing.two,
+  },
+  texteSigner: {
+    color: '#15803D',
+  },
+  reserves: {
+    color: '#B45309',
   },
   pressed: {
     opacity: 0.7,

@@ -1,6 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 
+import {
+  ORDRE_SIGNATURES,
+  type RoleSignature,
+  type Signature,
+  type Signatures,
+} from '@/lib/signatures';
+
 export type DemandeStatut = 'En attente' | 'Validée' | 'Refusée';
 
 /** Une pièce chargée dans le camion, avec son poids en tonnes. */
@@ -32,6 +39,8 @@ export type Demande = {
   heureInitiale?: string;
   /** Numéro du bon de livraison, attribué à la première édition. */
   numeroBL?: string;
+  /** Signatures recueillies, dans l'ordre expéditeur → chauffeur → réceptionnaire. */
+  signatures?: Signatures;
 };
 
 type EtatDemandes = {
@@ -72,6 +81,35 @@ async function persister(demandes: Demande[]) {
 }
 
 const texte = (valeur: unknown) => (typeof valeur === 'string' ? valeur : '');
+
+/**
+ * Relit les signatures enregistrées.
+ *
+ * Une signature sans tracé ou sans horodatage est écartée : mieux vaut un
+ * cadre resté vide, que le bon signalera, qu'une signature incomplète dont
+ * on ne saurait dire ce qu'elle atteste.
+ */
+function normaliserSignatures(valeur: unknown): Signatures | undefined {
+  if (typeof valeur !== 'object' || valeur === null) return undefined;
+  const source = valeur as Record<string, unknown>;
+  const signatures: Signatures = {};
+
+  for (const role of ORDRE_SIGNATURES) {
+    const brut = source[role];
+    if (typeof brut !== 'object' || brut === null) continue;
+    const s = brut as Record<string, unknown>;
+    if (typeof s.trace !== 'string' || s.trace.length === 0) continue;
+    if (typeof s.signeLe !== 'string' || s.signeLe.length === 0) continue;
+    signatures[role] = {
+      nom: texte(s.nom),
+      trace: s.trace,
+      signeLe: s.signeLe,
+      reserves: typeof s.reserves === 'string' && s.reserves.length > 0 ? s.reserves : undefined,
+    };
+  }
+
+  return Object.keys(signatures).length > 0 ? signatures : undefined;
+}
 
 /**
  * Relit la liste des pièces d'une demande enregistrée.
@@ -125,6 +163,7 @@ function normaliserDemande(valeur: unknown): Demande | null {
     dateInitiale: typeof d.dateInitiale === 'string' ? d.dateInitiale : undefined,
     heureInitiale: typeof d.heureInitiale === 'string' ? d.heureInitiale : undefined,
     numeroBL: typeof d.numeroBL === 'string' ? d.numeroBL : undefined,
+    signatures: normaliserSignatures(d.signatures),
   };
 }
 
@@ -239,6 +278,22 @@ export function attribuerNumeroBL(id: string): string | null {
   majEtat({ demandes });
   persister(demandes);
   return numeroBL;
+}
+
+/**
+ * Enregistre une signature sur le bon d'un camion.
+ *
+ * Une signature déjà apposée n'est jamais remplacée : elle atteste un fait
+ * daté, que la suite du trajet ne doit pas pouvoir réécrire.
+ */
+export function enregistrerSignature(id: string, role: RoleSignature, signature: Signature) {
+  const demandes = etat.demandes.map((demande) => {
+    if (demande.id !== id) return demande;
+    if (demande.signatures?.[role]) return demande;
+    return { ...demande, signatures: { ...demande.signatures, [role]: signature } };
+  });
+  majEtat({ demandes });
+  persister(demandes);
 }
 
 export function setDemandeStatut(id: string, statut: DemandeStatut) {

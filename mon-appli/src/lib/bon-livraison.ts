@@ -1,6 +1,12 @@
 import type { Demande } from '@/data/demandes-store';
 import { formatDateFr } from '@/lib/dates';
 import { formatPoids, piecesRetenues, totalPoids } from '@/lib/poids';
+import {
+  formatHorodatage,
+  LIBELLES_SIGNATURE,
+  ORDRE_SIGNATURES,
+  REPERE_SIGNATURE,
+} from '@/lib/signatures';
 
 /** En-tête imprimé sur le bon. À remplacer par les mentions légales réelles. */
 export const EMETTEUR = {
@@ -27,6 +33,38 @@ export function htmlBonLivraison(demande: Demande, numero: string, emisLe = new 
   const dateEmission = `${String(emisLe.getDate()).padStart(2, '0')}/${String(
     emisLe.getMonth() + 1
   ).padStart(2, '0')}/${emisLe.getFullYear()}`;
+
+  const signatures = demande.signatures ?? {};
+  const reserves = signatures.receptionnaire?.reserves;
+
+  const cadresSignature = ORDRE_SIGNATURES.map((role) => {
+    const libelle = LIBELLES_SIGNATURE[role];
+    const signature = signatures[role];
+
+    // Un cadre signé porte le tracé et son horodatage ; un cadre vide garde
+    // sa place pour être signé à la main sur le bon imprimé.
+    const contenu = signature
+      ? `<div class="trace">
+           <svg viewBox="0 0 ${REPERE_SIGNATURE.largeur} ${REPERE_SIGNATURE.hauteur}"
+                preserveAspectRatio="xMidYMid meet">
+             <path d="${echapper(signature.trace)}" fill="none" stroke="#111"
+                   stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+           </svg>
+         </div>
+         <div class="ligne">${echapper(signature.nom)}<br />${echapper(
+           formatHorodatage(signature.signeLe)
+         )}</div>`
+      : `<div class="espace"></div>
+         <div class="ligne">Nom, date et signature</div>`;
+
+    return `
+    <div class="signature">
+      <span class="rang">${libelle.rang}</span>
+      <h2>${echapper(libelle.titre)}</h2>
+      <div class="quand">${echapper(libelle.quand)}</div>
+      ${contenu}
+    </div>`;
+  }).join('');
 
   const lignes = pieces
     .map(
@@ -96,8 +134,14 @@ export function htmlBonLivraison(demande: Demande, numero: string, emisLe = new 
   .signature .quand { color: #666; font-size: 8.5pt; }
   /* Zone laissée libre pour signer : c'est elle qui donne sa hauteur au cadre. */
   .signature .espace { flex: 1; min-height: 46px; }
+  .signature .trace { flex: 1; min-height: 46px; display: flex; align-items: center; }
+  .signature .trace svg { width: 100%; height: 46px; }
   .signature .ligne { border-top: 1px dotted #888; padding-top: 3px;
-                      color: #666; font-size: 8pt; }
+                      color: #666; font-size: 8pt; line-height: 1.3; }
+
+  .reserves { margin-top: 12px; border: 1.5px solid #B45309; padding: 9px 12px; }
+  .reserves h2 { margin: 0 0 3px; font-size: 8.5pt; text-transform: uppercase;
+                 letter-spacing: 1px; color: #B45309; font-weight: 700; }
 
   .pied { margin-top: 16px; border-top: 1px solid #ddd; padding-top: 7px;
           color: #666; font-size: 8.5pt; }
@@ -151,29 +195,15 @@ export function htmlBonLivraison(demande: Demande, numero: string, emisLe = new 
       : ''
   }
 
-  <div class="signatures">
-    <div class="signature">
-      <span class="rang">1</span>
-      <h2>${echapper(EMETTEUR.raisonSociale)}</h2>
-      <div class="quand">Au chargement — pièces conformes et complètes</div>
-      <div class="espace"></div>
-      <div class="ligne">Nom, date et signature</div>
-    </div>
-    <div class="signature">
-      <span class="rang">2</span>
-      <h2>Le chauffeur</h2>
-      <div class="quand">Au départ — chargement pris en charge</div>
-      <div class="espace"></div>
-      <div class="ligne">Nom, date et signature</div>
-    </div>
-    <div class="signature">
-      <span class="rang">3</span>
-      <h2>Le réceptionnaire</h2>
-      <div class="quand">À l'arrivée — conforme à la réception</div>
-      <div class="espace"></div>
-      <div class="ligne">Nom, date et signature</div>
-    </div>
-  </div>
+  <div class="signatures">${cadresSignature}</div>
+
+  ${
+    reserves
+      ? `<div class="reserves"><h2>Réserves émises à la réception</h2><div>${echapper(
+          reserves
+        )}</div></div>`
+      : ''
+  }
 
   <div class="pied">
     Les réserves éventuelles doivent être portées sur le présent bon au moment de la réception.
