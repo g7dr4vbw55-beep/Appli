@@ -8,6 +8,9 @@ import { Portefeuille } from './pages/Portefeuille';
 import { NouvelOrdre } from './pages/NouvelOrdre';
 import { Parametres } from './pages/Parametres';
 import { Journal } from './pages/Journal';
+import { Glossaire } from './pages/Glossaire';
+import { Decrypteur } from './pages/Decrypteur';
+import { Fiscalite } from './pages/Fiscalite';
 
 export function App() {
   return (
@@ -21,6 +24,9 @@ export function App() {
         <Route path="/portefeuille/nouvel-ordre" element={<NouvelOrdre />} />
         <Route path="/portefeuille/parametres" element={<Parametres />} />
         <Route path="/journal" element={<Journal />} />
+        <Route path="/glossaire" element={<Glossaire />} />
+        <Route path="/decrypteur" element={<Decrypteur />} />
+        <Route path="/fiscalite" element={<Fiscalite />} />
         <Route
           path="*"
           element={<p className="text-sm text-ardoise-600">Page introuvable.</p>}

@@ -11,7 +11,6 @@
  * Zod (structured outputs) : la reponse ne peut pas prendre une autre forme.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { z } from 'zod';
 import { config } from '../config.js';
 import { db, nowIso } from '../db/index.js';
@@ -108,6 +107,129 @@ const schemaAnalyse = z.object({
     ),
 });
 
+/**
+ * Schema JSON impose a l'API pour la reponse du decrypteur. Il reflete
+ * exactement schemaAnalyse ci-dessus, qui sert de seconde barriere de
+ * validation cote serveur.
+ */
+export const SCHEMA_SORTIE: Record<string, unknown> = {
+  type: 'object',
+  additionalProperties: false,
+  required: [
+    'titre',
+    'natureDuTexte',
+    'auteurIdentifiable',
+    'resumeFactuel',
+    'jargon',
+    'faitsVerifiables',
+    'opinionsEtPromesses',
+    'signauxAlerte',
+    'informationsManquantes',
+    'questionsAsePoser',
+    'verificationsOfficielles',
+    'syntheseNeutre',
+  ],
+  properties: {
+    titre: {
+      type: 'string',
+      description: 'Titre court et neutre décrivant la nature du texte analysé.',
+    },
+    natureDuTexte: {
+      type: 'string',
+      description:
+        "Nature apparente du texte : article de presse, publication de réseau social, publicité, courriel de démarchage, communiqué, message privé, etc.",
+    },
+    auteurIdentifiable: {
+      type: 'boolean',
+      description: "Le texte permet-il d'identifier un auteur ou une entité responsable ?",
+    },
+    resumeFactuel: {
+      type: 'string',
+      description: "Résumé neutre de ce que le texte affirme réellement, en quelques phrases.",
+    },
+    jargon: {
+      type: 'array',
+      description: 'Termes techniques ou financiers employés dans le texte, expliqués simplement.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['terme', 'explication'],
+        properties: {
+          terme: { type: 'string' },
+          explication: { type: 'string', description: 'Explication en langage simple, sans jargon.' },
+        },
+      },
+    },
+    faitsVerifiables: {
+      type: 'array',
+      description: 'Éléments présentés comme des faits et qui peuvent être vérifiés.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['affirmation', 'commentVerifier'],
+        properties: {
+          affirmation: { type: 'string' },
+          commentVerifier: {
+            type: 'string',
+            description: 'Comment cette affirmation pourrait être vérifiée de manière indépendante.',
+          },
+        },
+      },
+    },
+    opinionsEtPromesses: {
+      type: 'array',
+      description: 'Opinions, promesses, projections et jugements présentés comme des évidences.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['affirmation', 'pourquoiCeNestPasUnFait'],
+        properties: {
+          affirmation: { type: 'string' },
+          pourquoiCeNestPasUnFait: { type: 'string' },
+        },
+      },
+    },
+    signauxAlerte: {
+      type: 'array',
+      description:
+        "Signaux d'alerte objectivement présents dans le texte. Liste vide si le texte n'en contient pas.",
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['signal', 'extrait', 'explication', 'gravite'],
+        properties: {
+          signal: { type: 'string', description: "Nom court du signal d'alerte." },
+          extrait: { type: 'string', description: 'Passage du texte qui le manifeste, cité brièvement.' },
+          explication: { type: 'string', description: "Pourquoi ce procédé constitue un signal d'alerte." },
+          gravite: { type: 'string', enum: ['faible', 'moyenne', 'elevee'] },
+        },
+      },
+    },
+    informationsManquantes: {
+      type: 'array',
+      description:
+        "Éléments qu'un lecteur devrait avoir et qui sont absents : auteur, date, source, méthodologie, mention du risque, statut réglementaire.",
+      items: { type: 'string' },
+    },
+    questionsAsePoser: {
+      type: 'array',
+      description: 'Questions de vérification concrètes que la personne peut se poser.',
+      items: { type: 'string' },
+    },
+    verificationsOfficielles: {
+      type: 'array',
+      description:
+        "Vérifications à mener auprès de sources officielles françaises, quand c'est pertinent.",
+      items: { type: 'string' },
+    },
+    syntheseNeutre: {
+      type: 'string',
+      description:
+        "Synthèse descriptive en trois à cinq phrases. Aucune recommandation, aucune prévision, aucun jugement sur la personne.",
+    },
+  },
+};
+
 export type Analyse = z.infer<typeof schemaAnalyse>;
 
 export function decrypteurDisponible(): boolean {
@@ -139,24 +261,43 @@ export async function analyser(
   ].join('\n');
 
   // Sorties structurees : le format de reponse est contraint cote API par le
-  // schema Zod ci-dessus, donc la reponse ne peut pas prendre une autre forme.
-  const reponse = await client.beta.messages.parse({
+  // schema JSON ci-dessus, donc la reponse ne peut pas prendre une autre forme.
+  // Le schema est ecrit a la main plutot que derive de Zod, pour ne pas
+  // dependre de Zod v4 (le helper betaZodOutputFormat du SDK l'exige) alors que
+  // le reste du serveur valide ses entrees avec Zod 3.
+  const reponse = await client.beta.messages.create({
     model: config.anthropic.model,
     max_tokens: 8000,
     system: PROMPT_SYSTEME,
     messages: [{ role: 'user', content: message }],
-    // Nom du parametre tel qu'expose par la version du SDK declaree dans
-    // server/package.json (@anthropic-ai/sdk 0.71).
-    output_format: betaZodOutputFormat(schemaAnalyse),
+    betas: ['structured-outputs-2025-11-13'],
+    output_format: { type: 'json_schema', schema: SCHEMA_SORTIE },
   });
 
-  if (!reponse.parsed_output) {
+  const texteReponse = reponse.content
+    .filter((bloc): bloc is Anthropic.Beta.BetaTextBlock => bloc.type === 'text')
+    .map((bloc) => bloc.text)
+    .join('')
+    .trim();
+
+  let brut: unknown;
+  try {
+    brut = JSON.parse(texteReponse);
+  } catch {
     throw new Error(
-      "La réponse du modèle n'a pas pu être interprétée. Réessayez, éventuellement avec un texte plus court.",
+      "La réponse du modèle n'a pas pu être lue comme du JSON. Réessayez, éventuellement avec un texte plus court.",
     );
   }
 
-  return { analyse: reponse.parsed_output, modele: config.anthropic.model };
+  // Seconde barriere : on revalide localement la structure recue.
+  const validation = schemaAnalyse.safeParse(brut);
+  if (!validation.success) {
+    throw new Error(
+      "La réponse du modèle ne respecte pas la structure attendue. Réessayez, éventuellement avec un texte plus court.",
+    );
+  }
+
+  return { analyse: validation.data, modele: config.anthropic.model };
 }
 
 export function enregistrerAnalyse(

@@ -5,6 +5,7 @@ import { parcoursRouter } from './routes/parcours.js';
 import { portefeuilleRouter } from './routes/portefeuille.js';
 import { journalRouter } from './routes/journal.js';
 import { glossaireRouter, decrypteurRouter } from './routes/glossaire.js';
+import { fiscaliteRouter } from './routes/fiscalite.js';
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -22,6 +23,7 @@ app.get('/api/sante', (_req, res) => {
       portefeuille: true,
       journal: true,
       glossaire: true,
+      fiscalite: true,
       decrypteur: Boolean(config.anthropic.apiKey),
     },
     cotations: {
@@ -41,6 +43,7 @@ app.use('/api/portefeuille', portefeuilleRouter);
 app.use('/api/journal', journalRouter);
 app.use('/api/glossaire', glossaireRouter);
 app.use('/api/decrypteur', decrypteurRouter);
+app.use('/api/fiscalite', fiscaliteRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ erreur: 'Route inconnue.' });
