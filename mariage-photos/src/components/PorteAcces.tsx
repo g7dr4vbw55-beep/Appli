@@ -62,7 +62,13 @@ function EcranCodeAcces({ onValide }: { onValide: () => void }) {
           autoFocus
           inputMode="text"
           autoComplete="off"
-          autoCapitalize="characters"
+          autoCorrect="off"
+          spellCheck={false}
+          // "characters" mettait tout le code en capitales sur mobile, ce qui
+          // ne correspond pas à un code écrit en minuscules et inquiète
+          // l'invité. Seule la première lettre est capitalisée ; la saisie
+          // reste de toute façon comparée sans tenir compte de la casse.
+          autoCapitalize="sentences"
           value={saisie}
           onChange={(e) => {
             setSaisie(e.target.value)
