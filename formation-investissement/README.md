@@ -29,7 +29,9 @@ pratiquer sur un portefeuille **entièrement fictif**, et mesure la progression.
 
 ## Installation
 
-**Prérequis :** Node.js 20 ou plus récent (`node -v` pour vérifier).
+**Prérequis :** Node.js **22.5 ou plus récent** (`node -v` pour vérifier). Node 24 LTS est recommandé.
+
+Aucun compilateur n’est nécessaire : le projet **n’a aucune dépendance native**.
 
 ```bash
 cd formation-investissement
@@ -39,8 +41,9 @@ npm install
 Une seule commande suffit : le projet utilise les *espaces de travail* npm, `npm install`
 à la racine installe les dépendances du serveur **et** du client.
 
-> `better-sqlite3` est un module natif : son installation compile ou télécharge un binaire.
-> Si elle échoue, voyez la section [Dépannage](#dépannage).
+> **Utilisateurs Windows :** si PowerShell refuse d’exécuter `npm` (« l’exécution de scripts
+> est désactivée sur ce système »), écrivez `npm.cmd` au lieu de `npm` dans toutes les
+> commandes. Voir la section [Dépannage](#dépannage).
 
 Puis chargez le contenu pédagogique et le jeu de démonstration :
 
@@ -307,7 +310,16 @@ Ces décisions ont été prises explicitement, et non par défaut.
    que recalculées à partir des ordres. C’est ce qui permet au module 3 de comparer une
    intention écrite à une durée de détention réelle.
 
-8. **Le décrypteur n’utilise pas le helper Zod du SDK Anthropic**, qui exige Zod v4 alors
+8. **La base de données utilise `node:sqlite`, le module SQLite intégré à Node**, et non
+   `better-sqlite3`. Ce dernier est un module natif : il doit être compilé ou téléchargé
+   sous forme de binaire précompilé, et son installation échoue sur une machine Windows
+   dépourvue des outils de compilation C++ de Visual Studio, ou dès qu’aucun binaire n’existe
+   pour la version de Node installée. `node:sqlite` est livré avec Node : `npm install` ne
+   compile rien, sur aucun système. Une fine couche (`server/src/db/index.ts`) reproduit les
+   deux commodités de `better-sqlite3` utilisées ici, `pragma()` et `transaction()` avec
+   points de sauvegarde, de sorte que le reste du code est identique.
+
+9. **Le décrypteur n’utilise pas le helper Zod du SDK Anthropic**, qui exige Zod v4 alors
    que le reste du serveur valide ses entrées avec Zod 3. Le schéma JSON est écrit
    explicitement, et la réponse du modèle est **revalidée localement** avec Zod après
    réception : double barrière.
@@ -332,10 +344,24 @@ Ces décisions ont été prises explicitement, et non par défaut.
 
 ## Dépannage
 
-**`npm install` échoue sur `better-sqlite3`.**
-C’est un module natif. Sous Linux, installez les outils de compilation
-(`build-essential`, `python3`) ; sous macOS, les *Command Line Tools* (`xcode-select
---install`). Puis relancez `npm install`.
+**Windows : « npm : Impossible de charger le fichier npm.ps1, car l’exécution de scripts est
+désactivée sur ce système ».**
+PowerShell bloque les scripts par défaut. Deux solutions :
+
+- le plus simple, écrire `npm.cmd` au lieu de `npm` dans toutes les commandes ;
+- ou débloquer une fois pour toutes, pour votre compte uniquement :
+  `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`.
+
+**`npm install` échoue en demandant Visual Studio ou `node-gyp`.**
+Cela ne devrait plus arriver : le projet n’a aucune dépendance native depuis le passage à
+`node:sqlite`. Si le message persiste, un `node_modules` d’une version antérieure traîne
+encore : supprimez-le puis relancez l’installation.
+
+```
+Remove-Item node_modules -Recurse -Force   # Windows PowerShell
+rm -rf node_modules                        # macOS et Linux
+npm install
+```
 
 **Le port 3001 ou 5173 est déjà utilisé.**
 Changez `PORT` dans `.env` pour l’API. Pour le client, modifiez `server.port` dans
