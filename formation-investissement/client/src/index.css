@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-ardoise-50: #f6f7f9;
+  --color-ardoise-100: #eceef2;
+  --color-ardoise-200: #d5d9e2;
+  --color-ardoise-300: #b0b8c9;
+  --color-ardoise-400: #8591aa;
+  --color-ardoise-500: #65728f;
+  --color-ardoise-600: #505b76;
+  --color-ardoise-700: #424a60;
+  --color-ardoise-800: #394050;
+  --color-ardoise-900: #333846;
+  --color-ardoise-950: #22252e;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ardoise-50);
+  color: var(--color-ardoise-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Contenu pedagogique : rendu lisible d'un markdown leger. */
+.contenu-lecon h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-ardoise-950);
+}
+.contenu-lecon h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.contenu-lecon p {
+  margin-bottom: 1rem;
+  line-height: 1.75;
+}
+.contenu-lecon ul,
+.contenu-lecon ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+  line-height: 1.75;
+}
+.contenu-lecon ul {
+  list-style-type: disc;
+}
+.contenu-lecon ol {
+  list-style-type: decimal;
+}
+.contenu-lecon li {
+  margin-bottom: 0.375rem;
+}
+.contenu-lecon strong {
+  font-weight: 600;
+  color: var(--color-ardoise-950);
+}
+.contenu-lecon em {
+  font-style: italic;
+}
