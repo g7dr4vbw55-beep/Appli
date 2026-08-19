@@ -50,7 +50,8 @@ function EcranCodeAcces({ onValide }: { onValide: () => void }) {
         {weddingConfig.eventTitle}
       </h1>
       <p className="mt-4 max-w-xs text-center text-lg leading-relaxed text-mauve-300">
-        Entrez le code affiché sur votre table pour rejoindre l'album.
+        Entrez le code inscrit <span className="font-semibold text-rosee-300">juste au-dessus du QR code</span>,
+        sur la carte de votre table.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-9 w-full max-w-sm">
@@ -79,7 +80,7 @@ function EcranCodeAcces({ onValide }: { onValide: () => void }) {
         />
         {erreur && (
           <p className="mt-3 text-center text-base font-semibold text-corail-300">
-            Ce code n'est pas le bon. Vérifiez la carte posée sur votre table.
+            Ce code n'est pas le bon. Il se trouve juste au-dessus du QR code.
           </p>
         )}
         <BoutonPrincipal>Valider</BoutonPrincipal>
