@@ -8,10 +8,10 @@ import {
   setMotDePasseSession,
   supprimerCommentaire,
   supprimerPhoto,
-  telechargerArchiveZip,
   verifierMotDePasse,
   type CodeConnexion,
 } from '../lib/adminApi'
+import { exporterToutesLesPhotos, type ProgressionExport } from '../lib/exportPhotos'
 import type { Commentaire, PhotoAvecUrl } from '../lib/types'
 
 export default function Admin() {
@@ -88,7 +88,9 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
   const [fini, setFini] = useState(false)
   const [photoOuverte, setPhotoOuverte] = useState<PhotoAvecUrl | null>(null)
   const [exportEnCours, setExportEnCours] = useState(false)
+  const [progression, setProgression] = useState<ProgressionExport | null>(null)
   const [messageErreur, setMessageErreur] = useState<string | null>(null)
+  const [messageSucces, setMessageSucces] = useState<string | null>(null)
 
   const chargerPlus = useCallback(async () => {
     setChargement(true)
@@ -126,12 +128,22 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
   async function handleExport() {
     setExportEnCours(true)
     setMessageErreur(null)
+    setMessageSucces(null)
+    setProgression(null)
     try {
-      await telechargerArchiveZip(motDePasse)
+      const resultat = await exporterToutesLesPhotos(setProgression)
+      const parties =
+        resultat.nombreParties > 1 ? ` en ${resultat.nombreParties} archives` : ''
+      const manquantes =
+        resultat.echecs.length > 0
+          ? ` ${resultat.echecs.length} photo(s) n'ont pas pu être récupérées, la liste est dans le fichier PHOTOS-MANQUANTES.txt de l'archive.`
+          : ''
+      setMessageSucces(`${resultat.photosExportees} photo(s) téléchargée(s)${parties}.${manquantes}`)
     } catch (err) {
       setMessageErreur(err instanceof Error ? err.message : "L'archive n'a pas pu être créée.")
     } finally {
       setExportEnCours(false)
+      setProgression(null)
     }
   }
 
@@ -159,8 +171,23 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
           disabled={exportEnCours}
           className="w-full rounded-2xl bg-corail-500 px-6 py-4 text-lg font-bold text-prune-950 disabled:opacity-40"
         >
-          {exportEnCours ? 'Préparation de l\'archive…' : 'Télécharger toutes les photos (.zip)'}
+          {exportEnCours ? 'Téléchargement en cours…' : 'Télécharger toutes les photos (.zip)'}
         </button>
+
+        {progression && <BarreProgression progression={progression} />}
+
+        {messageSucces && (
+          <div className="mt-3 rounded-xl border border-rosee-400/50 bg-rosee-400/10 px-4 py-3">
+            <p className="text-sm font-semibold text-rosee-300">{messageSucces}</p>
+          </div>
+        )}
+
+        {exportEnCours && (
+          <p className="mt-3 text-center text-sm leading-relaxed text-mauve-400">
+            Laissez cet onglet ouvert jusqu'à la fin. Si votre navigateur demande l'autorisation de
+            télécharger plusieurs fichiers, acceptez.
+          </p>
+        )}
       </div>
 
       {messageErreur && (
@@ -230,6 +257,32 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
           onFermer={() => setPhotoOuverte(null)}
         />
       )}
+    </div>
+  )
+}
+
+function BarreProgression({ progression }: { progression: ProgressionExport }) {
+  const { phase, total, traitees, partie, nombreParties } = progression
+  const pourcentage = total === 0 ? 0 : Math.round((traitees / total) * 100)
+
+  const libelle =
+    phase === 'liste'
+      ? 'Recherche des photos…'
+      : phase === 'compression'
+        ? `Préparation de l'archive ${partie} sur ${nombreParties}…`
+        : phase === 'termine'
+          ? 'Terminé !'
+          : `${traitees} photo(s) sur ${total}${nombreParties > 1 ? ` — archive ${partie} sur ${nombreParties}` : ''}`
+
+  return (
+    <div className="mt-3 rounded-xl border border-prune-700/70 bg-prune-850/70 px-4 py-3">
+      <p className="text-sm font-semibold text-creme">{libelle}</p>
+      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-prune-950">
+        <div
+          className="h-full rounded-full bg-corail-500 transition-all duration-200"
+          style={{ width: `${pourcentage}%` }}
+        />
+      </div>
     </div>
   )
 }
