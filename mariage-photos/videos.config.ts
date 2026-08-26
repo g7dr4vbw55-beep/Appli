@@ -33,6 +33,12 @@ export interface Video {
   /** 'youtube' | 'vimeo' | 'fichier' (adresse directe vers un .mp4) */
   plateforme: 'youtube' | 'vimeo' | 'fichier'
   /**
+   * Forme de l'image. 'paysage' par défaut, comme une vidéo classique.
+   * Mettez 'portrait' pour une vidéo verticale, notamment un Short YouTube :
+   * dans un cadre 16:9 elle apparaîtrait minuscule entre deux bandes noires.
+   */
+  format?: 'paysage' | 'portrait'
+  /**
    * Identifiant YouTube ou Vimeo, ou adresse complète du fichier .mp4.
    * Laissez vide tant que la vidéo n'est pas prête : la page affichera
    * « bientôt disponible » au lieu d'un lecteur cassé.
@@ -54,7 +60,8 @@ const videos: Video[] = [
     titre: 'Les lunettes M & S',
     description: 'La compilation de toutes vos photos avec les lunettes personnalisées.',
     plateforme: 'youtube',
-    source: '',
+    format: 'portrait',
+    source: 'CMiu1jGDAKk',
   },
 ]
 

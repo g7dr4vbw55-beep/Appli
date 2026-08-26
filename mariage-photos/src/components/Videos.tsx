@@ -14,6 +14,7 @@ export default function Videos({ prenom }: { prenom: string }) {
 }
 
 function BlocVideo({ video, prenom }: { video: Video; prenom: string }) {
+  const estPortrait = video.format === 'portrait'
   return (
     <section>
       <h2 className="text-xl font-bold leading-tight text-creme">{video.titre}</h2>
@@ -21,7 +22,15 @@ function BlocVideo({ video, prenom }: { video: Video; prenom: string }) {
         <p className="mt-1 text-sm leading-relaxed text-mauve-300">{video.description}</p>
       )}
 
-      <div className="mt-3 overflow-hidden rounded-2xl bg-black">
+      {/* Une vidéo verticale est bridée en largeur pour ne pas dépasser 70 %
+          de la hauteur de l'écran : sinon elle repousserait les commentaires
+          hors de vue et obligerait à faire défiler pour voir le lecteur. */}
+      <div
+        className={[
+          'mt-3 overflow-hidden rounded-2xl bg-black',
+          estPortrait ? 'mx-auto w-full max-w-[calc(70dvh*9/16)]' : '',
+        ].join(' ')}
+      >
         <Lecteur video={video} />
       </div>
 
@@ -31,9 +40,11 @@ function BlocVideo({ video, prenom }: { video: Video; prenom: string }) {
 }
 
 function Lecteur({ video }: { video: Video }) {
+  const proportions = video.format === 'portrait' ? 'aspect-[9/16]' : 'aspect-video'
+
   if (!video.source.trim()) {
     return (
-      <div className="flex aspect-video items-center justify-center bg-prune-850 px-6 text-center">
+      <div className={`flex ${proportions} items-center justify-center bg-prune-850 px-6 text-center`}>
         <p className="text-sm leading-relaxed text-mauve-400">
           Cette vidéo sera bientôt disponible.
         </p>
@@ -44,7 +55,7 @@ function Lecteur({ video }: { video: Video }) {
   if (video.plateforme === 'fichier') {
     return (
       // eslint-disable-next-line jsx-a11y/media-has-caption
-      <video src={video.source} controls playsInline preload="metadata" className="aspect-video w-full">
+      <video src={video.source} controls playsInline preload="metadata" className={`${proportions} w-full`}>
         Votre navigateur ne peut pas lire cette vidéo.
       </video>
     )
@@ -62,7 +73,7 @@ function Lecteur({ video }: { video: Video }) {
       loading="lazy"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
       allowFullScreen
-      className="aspect-video w-full border-0"
+      className={`${proportions} w-full border-0`}
     />
   )
 }
