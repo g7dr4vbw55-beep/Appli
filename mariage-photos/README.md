@@ -237,6 +237,16 @@ Si une valeur secrète s'est retrouvée dans un fichier publié (par exemple `.e
 
 ---
 
+## Après le mariage : ce que voient les invités
+
+Une fois la soirée passée et les photos récupérées, l'application n'est plus un outil de collecte mais un souvenir à revoir. Les onglets **Album** et **Défis** ont été retirés de l'espace invités, qui ne présente plus que **Vidéos** et **Merci**.
+
+**Les photos ne sont pas supprimées pour autant.** Elles restent dans Supabase, et la page d'administration donne toujours accès à la grille complète, au téléchargement de l'archive et à la modération des commentaires de la soirée.
+
+Pour remettre l'album et les défis en ligne, revenez au commit précédant leur retrait : tout le code est conservé dans l'historique Git.
+
+---
+
 ## Personnaliser l'application
 
 Toute la configuration visible (titre de l'événement, message d'accueil, couleurs de la PWA) se trouve dans un seul fichier : **[`wedding.config.ts`](./wedding.config.ts)**, à la racine du projet. Modifiez-le, puis redéployez (un nouveau `git push` suffit si vous êtes connecté à GitHub — Vercel redéploie automatiquement à chaque push).

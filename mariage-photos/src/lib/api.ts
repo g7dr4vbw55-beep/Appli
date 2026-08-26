@@ -68,12 +68,6 @@ function messageErreurCommentairesVideo(message: string): string {
   return message
 }
 
-export async function ajouterCommentaire(photoId: string, prenom: string, contenu: string): Promise<Commentaire> {
-  const { data, error } = await supabase
-    .from('commentaires')
-    .insert({ photo_id: photoId, auteur_prenom: prenom, contenu })
-    .select()
-    .single()
-  if (error) throw error
-  return data as Commentaire
-}
+// L'ajout de commentaires sur les photos a été retiré en même temps que
+// l'album côté invités. La lecture reste nécessaire à l'administration, qui
+// permet toujours de relire et de modérer les commentaires de la soirée.

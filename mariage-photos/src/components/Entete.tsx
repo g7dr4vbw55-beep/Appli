@@ -2,10 +2,9 @@ import weddingConfig from '../../wedding.config'
 
 interface Props {
   prenom: string
-  onAide: () => void
 }
 
-export default function Entete({ prenom, onAide }: Props) {
+export default function Entete({ prenom }: Props) {
   return (
     <header className="sticky top-0 z-20 border-b border-prune-700/60 bg-prune-950/85 px-4 py-3 backdrop-blur-md">
       <div className="mx-auto flex max-w-2xl items-center gap-3">
@@ -18,20 +17,12 @@ export default function Entete({ prenom, onAide }: Props) {
         <div className="min-w-0 flex-1">
           {/* Nom court plutôt que titre complet : la barre est étroite, et
               le titre entier y serait tronqué en plein milieu. Il reste
-              affiché sur les écrans d'entrée et sur l'affiche. */}
+              affiché sur les écrans d'entrée. */}
           <h1 className="truncate text-base font-bold leading-tight text-creme">
             {weddingConfig.shortName}
           </h1>
           <p className="truncate text-sm text-mauve-400">Bonjour {prenom}</p>
         </div>
-        <button
-          type="button"
-          onClick={onAide}
-          aria-label="Revoir les règles du jeu"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-prune-600 text-lg font-bold text-mauve-300 active:bg-prune-800"
-        >
-          ?
-        </button>
       </div>
     </header>
   )
