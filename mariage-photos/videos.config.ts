@@ -47,7 +47,7 @@ const videos: Video[] = [
     description:
       'Le récapitulatif complet du mariage, en photos et en vidéo, du matin jusqu\'au bout de la nuit.',
     plateforme: 'youtube',
-    source: '',
+    source: '_IFDFZQBWhk',
   },
   {
     id: 'lunettes',
