@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["ES2023"],
+    // nodenext reproduit les règles d'exécution réelles de Node en mode module
+    // ES : les imports relatifs doivent porter une extension. Sans cela, les
+    // fonctions compilent mais plantent au démarrage sur Vercel
+    // (ERR_MODULE_NOT_FOUND, signalé comme FUNCTION_INVOCATION_FAILED).
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["api"]
+}

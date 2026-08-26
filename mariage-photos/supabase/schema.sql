@@ -1,0 +1,147 @@
+-- =========================================================================
+-- Script SQL pour l'application de partage de photos de mariage.
+-- À exécuter dans Supabase : Dashboard > SQL Editor > New query > coller
+-- ce fichier en entier > Run.
+--
+-- Important : si votre bucket de stockage ne s'appelle pas "photos",
+-- remplacez toutes les occurrences de 'photos' dans la section
+-- "STOCKAGE" ci-dessous par le nom exact de votre bucket.
+-- =========================================================================
+
+-- Nécessaire pour gen_random_uuid() (généralement déjà activée sur Supabase)
+create extension if not exists pgcrypto;
+
+-- =========================================================================
+-- TABLES
+-- =========================================================================
+
+create table if not exists public.photos (
+  id             uuid primary key default gen_random_uuid(),
+  created_at     timestamptz not null default now(),
+  storage_path   text not null unique,
+  auteur_prenom  text not null check (char_length(trim(auteur_prenom)) between 1 and 50),
+  largeur        integer,
+  hauteur        integer,
+  -- Identifiant du défi photo associé, tel que défini dans defis.config.ts.
+  -- Facultatif : une photo envoyée hors défi laisse cette colonne vide.
+  defi           text
+);
+
+-- Pour une base créée avant l'ajout des défis photo.
+alter table public.photos add column if not exists defi text;
+
+create table if not exists public.commentaires (
+  id             uuid primary key default gen_random_uuid(),
+  created_at     timestamptz not null default now(),
+  photo_id       uuid not null references public.photos (id) on delete cascade,
+  auteur_prenom  text not null check (char_length(trim(auteur_prenom)) between 1 and 50),
+  contenu        text not null check (char_length(trim(contenu)) between 1 and 500)
+);
+
+create index if not exists photos_created_at_idx on public.photos (created_at desc);
+-- Accélère le filtrage de la galerie par défi.
+create index if not exists photos_defi_created_at_idx on public.photos (defi, created_at desc);
+create index if not exists commentaires_photo_id_created_at_idx on public.commentaires (photo_id, created_at);
+
+-- =========================================================================
+-- DROITS D'ACCÈS À L'API
+--
+-- Rend les deux tables visibles depuis l'application, que l'option
+-- "Exposer automatiquement les nouvelles tables" ait été cochée ou non à la
+-- création du projet Supabase. Sans cela, l'envoi d'une photo échouerait
+-- avec une erreur "permission denied for table photos".
+--
+-- Les invités (anon) ne reçoivent que select (lire) et insert (ajouter) :
+-- ni update ni delete. C'est une deuxième barrière, en plus des règles RLS
+-- ci-dessous : même en cas d'erreur dans une politique, personne ne peut
+-- supprimer une photo ou un commentaire depuis le navigateur.
+--
+-- service_role est le rôle des fonctions serveur de la page
+-- d'administration : lui seul reçoit les droits de suppression. Sans cette
+-- ligne, l'administration échoue avec "permission denied for table photos"
+-- alors même que la galerie des invités fonctionne normalement.
+-- =========================================================================
+
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert on public.photos to anon, authenticated;
+grant select, insert on public.commentaires to anon, authenticated;
+grant all privileges on public.photos to service_role;
+grant all privileges on public.commentaires to service_role;
+
+-- =========================================================================
+-- ROW LEVEL SECURITY — TABLES
+--
+-- Principe : lecture et insertion publiques (l'application n'a pas de
+-- comptes utilisateurs), mais AUCUNE politique de modification ou de
+-- suppression n'est créée pour les rôles publics (anon/authenticated).
+-- Résultat : un visiteur du site ne peut jamais supprimer ni modifier une
+-- ligne, même en interrogeant directement l'API Supabase. Seule la clé
+-- service_role (utilisée uniquement par les fonctions serveur de la page
+-- d'administration) peut supprimer, car elle contourne totalement RLS.
+-- =========================================================================
+
+alter table public.photos enable row level security;
+alter table public.commentaires enable row level security;
+
+create policy "Lecture publique des photos"
+  on public.photos for select
+  to anon, authenticated
+  using (true);
+
+create policy "Ajout public de photos"
+  on public.photos for insert
+  to anon, authenticated
+  with check (true);
+
+create policy "Lecture publique des commentaires"
+  on public.commentaires for select
+  to anon, authenticated
+  using (true);
+
+create policy "Ajout public de commentaires"
+  on public.commentaires for insert
+  to anon, authenticated
+  with check (true);
+
+-- =========================================================================
+-- BUCKET DE STOCKAGE
+--
+-- Crée le bucket "photos" directement, ce qui évite d'avoir à le créer à la
+-- main dans l'interface (pratique depuis un téléphone). Si vous l'avez déjà
+-- créé, cette instruction ne fait rien et n'écrase pas vos réglages.
+--
+--   public = true          : les photos s'affichent dans la galerie sans
+--                            authentification, comme le fait l'application.
+--   file_size_limit        : 10 Mo par fichier. L'application compresse déjà
+--                            à environ 500 Ko ; cette limite est un garde-fou
+--                            contre un envoi anormalement gros.
+--   allowed_mime_types     : seules des images peuvent être déposées.
+-- =========================================================================
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'photos',
+  'photos',
+  true,
+  10485760,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+)
+on conflict (id) do nothing;
+
+-- =========================================================================
+-- ROW LEVEL SECURITY — STOCKAGE (storage.objects)
+--
+-- Même principe que pour les tables : lecture et dépôt publics, mais aucune
+-- politique de suppression pour les rôles publics. Un invité ne peut donc
+-- pas effacer les photos des autres depuis son navigateur.
+-- =========================================================================
+
+create policy "Lecture publique du bucket photos"
+  on storage.objects for select
+  to anon, authenticated
+  using (bucket_id = 'photos');
+
+create policy "Dépôt public dans le bucket photos"
+  on storage.objects for insert
+  to anon, authenticated
+  with check (bucket_id = 'photos');

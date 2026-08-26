@@ -1,0 +1,213 @@
+import { useEffect, useState, type FormEvent } from 'react'
+import videos, { type Video } from '../../videos.config'
+import { ajouterCommentaireVideo, chargerCommentairesVideo } from '../lib/api'
+import type { CommentaireVideo } from '../lib/types'
+
+export default function Videos({ prenom }: { prenom: string }) {
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-4 pb-12 pt-4">
+      <NoticeConfidentialite />
+      {videos.map((video) => (
+        <BlocVideo key={video.id} video={video} prenom={prenom} />
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Rassure les invités sur la confidentialité avant qu'ils ne se demandent
+ * qui d'autre peut voir ces images.
+ *
+ * Formulation volontairement exacte : les vidéos sont en « non répertorié »
+ * sur YouTube. Elles n'apparaissent ni sur la chaîne ni dans les recherches,
+ * et seules les personnes disposant du lien y accèdent — c'est-à-dire les
+ * invités. Promettre davantage serait faux.
+ */
+function NoticeConfidentialite() {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-rosee-400/40 bg-rosee-400/10 px-4 py-3">
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-rosee-300">
+        <path
+          d="M7 10V7a5 5 0 0 1 10 0v3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+        />
+        <rect x="4.5" y="10" width="15" height="10" rx="2.5" fill="currentColor" />
+      </svg>
+      <p className="text-sm leading-relaxed text-mauve-300">
+        <span className="font-bold text-rosee-300">Ces vidéos sont privées.</span> Elles n'apparaissent
+        pas dans les recherches YouTube et ne sont accessibles qu'avec le lien reçu : seuls les invités du
+        mariage peuvent les voir.
+      </p>
+    </div>
+  )
+}
+
+function BlocVideo({ video, prenom }: { video: Video; prenom: string }) {
+  const estPortrait = video.format === 'portrait'
+  return (
+    <section>
+      <h2 className="text-xl font-bold leading-tight text-creme">{video.titre}</h2>
+      {video.description && (
+        <p className="mt-1 text-sm leading-relaxed text-mauve-300">{video.description}</p>
+      )}
+
+      {/* Une vidéo verticale est bridée en largeur pour ne pas dépasser 70 %
+          de la hauteur de l'écran : sinon elle repousserait les commentaires
+          hors de vue et obligerait à faire défiler pour voir le lecteur. */}
+      <div
+        className={[
+          'mt-3 overflow-hidden rounded-2xl bg-black',
+          estPortrait ? 'mx-auto w-full max-w-[calc(70dvh*9/16)]' : '',
+        ].join(' ')}
+      >
+        <Lecteur video={video} />
+      </div>
+
+      <Commentaires video={video} prenom={prenom} />
+    </section>
+  )
+}
+
+function Lecteur({ video }: { video: Video }) {
+  const proportions = video.format === 'portrait' ? 'aspect-[9/16]' : 'aspect-video'
+
+  if (!video.source.trim()) {
+    return (
+      <div className={`flex ${proportions} items-center justify-center bg-prune-850 px-6 text-center`}>
+        <p className="text-sm leading-relaxed text-mauve-400">
+          Cette vidéo sera bientôt disponible.
+        </p>
+      </div>
+    )
+  }
+
+  if (video.plateforme === 'fichier') {
+    return (
+      // eslint-disable-next-line jsx-a11y/media-has-caption
+      <video src={video.source} controls playsInline preload="metadata" className={`${proportions} w-full`}>
+        Votre navigateur ne peut pas lire cette vidéo.
+      </video>
+    )
+  }
+
+  const src =
+    video.plateforme === 'youtube'
+      ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.source)}?rel=0`
+      : `https://player.vimeo.com/video/${encodeURIComponent(video.source)}`
+
+  return (
+    <iframe
+      src={src}
+      title={video.titre}
+      loading="lazy"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+      allowFullScreen
+      className={`${proportions} w-full border-0`}
+    />
+  )
+}
+
+function Commentaires({ video, prenom }: { video: Video; prenom: string }) {
+  const [commentaires, setCommentaires] = useState<CommentaireVideo[]>([])
+  const [chargement, setChargement] = useState(true)
+  const [texte, setTexte] = useState('')
+  const [envoi, setEnvoi] = useState(false)
+  const [erreur, setErreur] = useState<string | null>(null)
+
+  useEffect(() => {
+    let annule = false
+    setChargement(true)
+    chargerCommentairesVideo(video.id)
+      .then((c) => {
+        if (!annule) setCommentaires(c)
+      })
+      .catch((err: unknown) => {
+        if (!annule) setErreur(err instanceof Error ? err.message : 'Impossible de charger les commentaires.')
+      })
+      .finally(() => {
+        if (!annule) setChargement(false)
+      })
+    return () => {
+      annule = true
+    }
+  }, [video.id])
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    const contenu = texte.trim()
+    if (!contenu || envoi) return
+    setEnvoi(true)
+    setErreur(null)
+    try {
+      const nouveau = await ajouterCommentaireVideo(video.id, prenom, contenu)
+      setCommentaires((prev) => [...prev, nouveau])
+      setTexte('')
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : "Le commentaire n'a pas pu être envoyé.")
+    } finally {
+      setEnvoi(false)
+    }
+  }
+
+  return (
+    <div className="mt-4">
+      <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-mauve-500">
+        {commentaires.length > 0
+          ? `${commentaires.length} commentaire${commentaires.length > 1 ? 's' : ''}`
+          : 'Commentaires'}
+      </h3>
+
+      {chargement && <p className="pulsation text-sm text-mauve-400">Chargement…</p>}
+
+      {!chargement && commentaires.length === 0 && !erreur && (
+        <p className="text-base text-mauve-400">Aucun commentaire pour l'instant. Lancez-vous !</p>
+      )}
+
+      <ul className="flex flex-col gap-2.5">
+        {commentaires.map((c) => (
+          <li key={c.id} className="apparition rounded-2xl bg-prune-850/80 px-4 py-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm font-bold text-rosee-300">{c.auteur_prenom}</span>
+              <span className="shrink-0 text-xs text-mauve-500">{formaterDate(c.created_at)}</span>
+            </div>
+            <p className="mt-1 text-base leading-relaxed text-creme">{c.contenu}</p>
+          </li>
+        ))}
+      </ul>
+
+      {erreur && (
+        <p className="mt-3 rounded-xl border border-corail-500/70 bg-corail-600/15 px-3 py-2 text-sm font-semibold text-corail-300">
+          {erreur}
+        </p>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-3 flex items-center gap-2">
+        <input
+          value={texte}
+          onChange={(e) => setTexte(e.target.value)}
+          placeholder="Écrire un commentaire…"
+          maxLength={500}
+          className="min-w-0 flex-1 rounded-full border-2 border-prune-600 bg-prune-850/80 px-5 py-3.5 text-base text-creme placeholder-mauve-500 outline-none focus:border-corail-400"
+        />
+        <button
+          type="submit"
+          disabled={envoi || texte.trim().length === 0}
+          aria-label="Envoyer le commentaire"
+          className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full bg-corail-500 text-prune-950 transition disabled:opacity-35 active:bg-corail-600"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
+            <path d="M2 21V14l15-2-15-2V3l21 9-21 9Z" fill="currentColor" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  )
+}
+
+function formaterDate(iso: string): string {
+  const date = new Date(iso)
+  return date.toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}

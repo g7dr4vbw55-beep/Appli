@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   Palette « chaleureuse et festive ».
+   Volontairement sombre : l'application est utilisée dans une salle peu
+   éclairée, où un fond clair éblouit et vide la batterie. Les accents
+   corail et rosé ressortent fortement sur le prune, ce qui garde de gros
+   repères visuels lisibles d'un coup d'œil, même en dansant.
+   ========================================================================= */
+@theme {
+  --color-prune-950: #150a18;
+  --color-prune-900: #1e0d22;
+  --color-prune-850: #26112b;
+  --color-prune-800: #301636;
+  --color-prune-700: #401e47;
+  --color-prune-600: #55295e;
+
+  --color-corail-300: #ffb0a3;
+  --color-corail-400: #ff8f7c;
+  --color-corail-500: #ff6f5c;
+  --color-corail-600: #ec4f3c;
+
+  --color-rosee-300: #ffc2d1;
+  --color-rosee-400: #ff9fb6;
+
+  --color-or-300: #f7d08a;
+
+  --color-creme: #fdf0f2;
+  --color-mauve-300: #d9b4d3;
+  --color-mauve-400: #bd8fb6;
+  --color-mauve-500: #9c6f96;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--color-creme);
+  background-color: var(--color-prune-950);
+  /* Deux halos très diffus réchauffent le fond sans nuire à la lisibilité
+     du texte posé dessus. */
+  background-image:
+    radial-gradient(80rem 40rem at 50% -10%, #4a1f45 0%, transparent 60%),
+    radial-gradient(60rem 30rem at 100% 100%, #3d1630 0%, transparent 55%);
+  background-attachment: fixed;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+::selection {
+  background-color: var(--color-corail-400);
+  color: var(--color-prune-950);
+}
+
+/* Les photos apparaissent en fondu à mesure qu'elles se chargent, ce qui
+   évite l'effet de saccade quand la galerie se remplit sur un réseau lent. */
+@keyframes apparition {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.apparition {
+  animation: apparition 0.35s ease-out both;
+}
+
+@keyframes pulsation {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.pulsation {
+  animation: pulsation 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apparition,
+  .pulsation {
+    animation: none;
+  }
+}
