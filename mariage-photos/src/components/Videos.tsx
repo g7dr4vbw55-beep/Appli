@@ -6,9 +6,41 @@ import type { CommentaireVideo } from '../lib/types'
 export default function Videos({ prenom }: { prenom: string }) {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-4 pb-12 pt-4">
+      <NoticeConfidentialite />
       {videos.map((video) => (
         <BlocVideo key={video.id} video={video} prenom={prenom} />
       ))}
+    </div>
+  )
+}
+
+/**
+ * Rassure les invités sur la confidentialité avant qu'ils ne se demandent
+ * qui d'autre peut voir ces images.
+ *
+ * Formulation volontairement exacte : les vidéos sont en « non répertorié »
+ * sur YouTube. Elles n'apparaissent ni sur la chaîne ni dans les recherches,
+ * et seules les personnes disposant du lien y accèdent — c'est-à-dire les
+ * invités. Promettre davantage serait faux.
+ */
+function NoticeConfidentialite() {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-rosee-400/40 bg-rosee-400/10 px-4 py-3">
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-rosee-300">
+        <path
+          d="M7 10V7a5 5 0 0 1 10 0v3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+        />
+        <rect x="4.5" y="10" width="15" height="10" rx="2.5" fill="currentColor" />
+      </svg>
+      <p className="text-sm leading-relaxed text-mauve-300">
+        <span className="font-bold text-rosee-300">Ces vidéos sont privées.</span> Elles n'apparaissent
+        pas dans les recherches YouTube et ne sont accessibles qu'avec le lien reçu : seuls les invités du
+        mariage peuvent les voir.
+      </p>
     </div>
   )
 }
