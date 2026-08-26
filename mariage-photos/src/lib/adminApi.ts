@@ -106,8 +106,12 @@ export async function supprimerPhoto(id: string, motDePasse: string): Promise<vo
   if (!reponse.ok) throw await lireErreur(reponse, 'Suppression de la photo impossible')
 }
 
-export async function supprimerCommentaire(id: string, motDePasse: string): Promise<void> {
-  const reponse = await appelAdmin('/api/admin/delete-comment', motDePasse, { id })
+export async function supprimerCommentaire(
+  id: string,
+  motDePasse: string,
+  type: 'photo' | 'video' = 'photo',
+): Promise<void> {
+  const reponse = await appelAdmin('/api/admin/delete-comment', motDePasse, { id, type })
   if (!reponse.ok) throw await lireErreur(reponse, 'Suppression du commentaire impossible')
 }
 

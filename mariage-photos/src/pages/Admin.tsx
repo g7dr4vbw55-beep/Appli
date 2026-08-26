@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import weddingConfig from '../../wedding.config'
-import { chargerCommentaires, chargerPagePhotos } from '../lib/api'
+import { chargerCommentaires, chargerCommentairesVideo, chargerPagePhotos } from '../lib/api'
 import { intituleDefi } from '../../defis.config'
+import videos from '../../videos.config'
 import {
   effacerMotDePasseSession,
   getMotDePasseSession,
@@ -12,7 +13,7 @@ import {
   type CodeConnexion,
 } from '../lib/adminApi'
 import { exporterToutesLesPhotos, type ProgressionExport } from '../lib/exportPhotos'
-import type { Commentaire, PhotoAvecUrl } from '../lib/types'
+import type { Commentaire, CommentaireVideo, PhotoAvecUrl } from '../lib/types'
 
 export default function Admin() {
   const [motDePasse, setMotDePasse] = useState<string | null>(getMotDePasseSession)
@@ -250,6 +251,8 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
         )}
       </div>
 
+      <CommentairesVideos motDePasse={motDePasse} />
+
       {photoOuverte && (
         <PanneauCommentaires
           photo={photoOuverte}
@@ -257,6 +260,95 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
           onFermer={() => setPhotoOuverte(null)}
         />
       )}
+    </div>
+  )
+}
+
+/** Modération des commentaires laissés sous les vidéos récapitulatives. */
+function CommentairesVideos({ motDePasse }: { motDePasse: string }) {
+  const [parVideo, setParVideo] = useState<Record<string, CommentaireVideo[]>>({})
+  const [chargement, setChargement] = useState(true)
+  const [erreur, setErreur] = useState<string | null>(null)
+
+  useEffect(() => {
+    let annule = false
+    Promise.all(
+      videos.map(async (v) => [v.id, await chargerCommentairesVideo(v.id)] as const),
+    )
+      .then((entrees) => {
+        if (!annule) setParVideo(Object.fromEntries(entrees))
+      })
+      .catch((err: unknown) => {
+        if (!annule) setErreur(err instanceof Error ? err.message : 'Chargement impossible.')
+      })
+      .finally(() => {
+        if (!annule) setChargement(false)
+      })
+    return () => {
+      annule = true
+    }
+  }, [])
+
+  async function handleSupprimer(videoId: string, id: string) {
+    if (!confirm('Supprimer ce commentaire ?')) return
+    setErreur(null)
+    try {
+      await supprimerCommentaire(id, motDePasse, 'video')
+      setParVideo((prev) => ({ ...prev, [videoId]: prev[videoId].filter((c) => c.id !== id) }))
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : 'La suppression a échoué.')
+    }
+  }
+
+  const total = Object.values(parVideo).reduce((n, liste) => n + liste.length, 0)
+
+  return (
+    <div className="mx-auto max-w-2xl px-4 pt-8">
+      <h2 className="text-sm font-bold uppercase tracking-widest text-mauve-500">
+        Commentaires des vidéos {!chargement && `(${total})`}
+      </h2>
+
+      {chargement && <p className="pulsation mt-3 text-sm text-mauve-400">Chargement…</p>}
+
+      {erreur && (
+        <p className="mt-3 rounded-xl border border-corail-500/70 bg-corail-600/15 px-3 py-2 text-sm font-semibold text-corail-300">
+          {erreur}
+        </p>
+      )}
+
+      {!chargement && !erreur && total === 0 && (
+        <p className="mt-3 text-sm text-mauve-400">Aucun commentaire sur les vidéos.</p>
+      )}
+
+      {videos.map((video) => {
+        const liste = parVideo[video.id] ?? []
+        if (liste.length === 0) return null
+        return (
+          <div key={video.id} className="mt-4">
+            <p className="mb-2 text-sm font-bold text-rosee-300">{video.titre}</p>
+            <ul className="flex flex-col gap-2">
+              {liste.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex items-start justify-between gap-3 rounded-xl bg-prune-850/80 px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <span className="text-sm font-bold text-creme">{c.auteur_prenom}</span>
+                    <p className="text-base text-mauve-300">{c.contenu}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleSupprimer(video.id, c.id)}
+                    className="shrink-0 rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white active:bg-rose-700"
+                  >
+                    Supprimer
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      })}
     </div>
   )
 }

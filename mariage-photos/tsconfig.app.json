@@ -22,5 +22,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "wedding.config.ts", "defis.config.ts", "remerciements.config.ts"]
+  "include": ["src", "wedding.config.ts", "defis.config.ts", "remerciements.config.ts", "videos.config.ts"]
 }

@@ -7,13 +7,14 @@ import Galerie from '../components/Galerie'
 import Defis from '../components/Defis'
 import Presentation from '../components/Presentation'
 import Remerciements from '../components/Remerciements'
+import Videos from '../components/Videos'
 import PhotoPleinEcran from '../components/PhotoPleinEcran'
 import { useUploadQueue } from '../lib/useUploadQueue'
 import { getDefisAccomplis } from '../lib/localPrefs'
 import { defisTries } from '../../defis.config'
 import type { PhotoAvecUrl } from '../lib/types'
 
-type Onglet = 'album' | 'defis' | 'merci'
+type Onglet = 'album' | 'defis' | 'videos' | 'merci'
 
 export default function Accueil() {
   return <PorteAcces>{(prenom) => <ContenuGalerie prenom={prenom} />}</PorteAcces>
@@ -86,6 +87,8 @@ function ContenuGalerie({ prenom }: { prenom: string }) {
         </>
       )}
 
+      {onglet === 'videos' && <Videos prenom={prenom} />}
+
       {onglet === 'merci' && <Remerciements />}
 
       {photoOuverte && (
@@ -116,8 +119,11 @@ function Onglets({
   totalDefis: number
 }) {
   return (
-    <div className="sticky top-[3.75rem] z-10 bg-prune-950/85 px-4 py-3 backdrop-blur-md">
-      <div className="mx-auto flex max-w-2xl gap-2 rounded-full bg-prune-850/80 p-1.5">
+    <div className="sticky top-[3.75rem] z-10 bg-prune-950/85 px-3 py-3 backdrop-blur-md">
+      {/* Quatre onglets ne tiennent plus côte à côte sur un petit téléphone :
+          la barre défile horizontalement plutôt que de tronquer les libellés,
+          et l'onglet actif est ramené dans le champ de vision. */}
+      <div className="mx-auto flex max-w-2xl gap-1.5 overflow-x-auto rounded-full bg-prune-850/80 p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <BoutonOnglet actif={actif === 'album'} onClick={() => onChanger('album')}>
           Album
         </BoutonOnglet>
@@ -131,6 +137,9 @@ function Onglets({
           >
             {nombreAccomplis}/{totalDefis}
           </span>
+        </BoutonOnglet>
+        <BoutonOnglet actif={actif === 'videos'} onClick={() => onChanger('videos')}>
+          Vidéos
         </BoutonOnglet>
         <BoutonOnglet actif={actif === 'merci'} onClick={() => onChanger('merci')}>
           Merci
@@ -153,8 +162,13 @@ function BoutonOnglet({
     <button
       type="button"
       onClick={onClick}
+      ref={(el) => {
+        // Ramène l'onglet actif dans le champ de vision quand la barre défile.
+        if (actif && el) el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      }}
       className={[
-        'flex flex-1 items-center justify-center rounded-full py-3 text-base font-bold transition-colors',
+        'flex flex-1 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-4 py-3',
+        'text-base font-bold transition-colors',
         actif ? 'bg-corail-500 text-prune-950' : 'text-mauve-300 active:bg-prune-800',
       ].join(' ')}
     >

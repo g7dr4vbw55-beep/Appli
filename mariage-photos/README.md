@@ -243,6 +243,30 @@ Toute la configuration visible (titre de l'événement, message d'accueil, coule
 
 Après une modification de `wedding.config.ts`, les icônes et le fichier `manifest.webmanifest` de la PWA sont régénérés automatiquement au moment du `build` (et du `dev`), vous n'avez rien d'autre à faire.
 
+### Les vidéos récapitulatives
+
+L'onglet **Vidéos** affiche deux vidéos de la journée, chacune avec son propre fil de commentaires. Tout se règle dans **[`videos.config.ts`](./videos.config.ts)** à la racine : titre, description, plateforme et identifiant de la vidéo.
+
+**Avant la première utilisation**, exécutez une fois [`supabase/videos-commentaires.sql`](./supabase/videos-commentaires.sql) dans le SQL Editor de Supabase. Ce script crée uniquement une nouvelle table : il ne touche ni aux photos, ni aux commentaires existants, ni au stockage.
+
+**Où héberger les vidéos ?** Sur YouTube, en mode **Non répertorié** : la vidéo n'apparaît ni dans les recherches ni sur votre chaîne, seules les personnes ayant le lien peuvent la voir. C'est gratuit, sans limite de trafic, et la qualité s'adapte au réseau de chaque invité.
+
+**N'hébergez pas les vidéos sur Supabase.** L'offre gratuite est limitée à 1 Go de stockage et 5 Go de trafic par mois. Une vidéo de 500 Mo regardée par 75 invités représente environ 37 Go : le site cesserait de fonctionner après une dizaine de visionnages.
+
+Pour récupérer l'identifiant à coller dans `source` :
+
+| Adresse de la vidéo | Identifiant |
+|---|---|
+| `https://www.youtube.com/watch?v=dQw4w9WgXcQ` | `dQw4w9WgXcQ` |
+| `https://youtu.be/dQw4w9WgXcQ` | `dQw4w9WgXcQ` |
+| `https://vimeo.com/123456789` | `123456789` |
+
+Tant que `source` est vide, la page affiche « Cette vidéo sera bientôt disponible » au lieu d'un lecteur cassé : vous pouvez donc publier la page avant d'avoir fini le montage.
+
+Si vous hébergez le fichier ailleurs (site personnel, service de stockage), mettez `plateforme: 'fichier'` et l'adresse complète du `.mp4` dans `source`.
+
+Les commentaires des vidéos se modèrent dans la page d'administration, en bas, sous la grille des photos.
+
 ### Les défis photo
 
 L'onglet **Défis** propose aux invités une liste de photos à réaliser pendant la soirée. La liste se modifie dans **[`defis.config.ts`](./defis.config.ts)**, à la racine du projet : un identifiant, un intitulé et un ordre d'affichage par défi.

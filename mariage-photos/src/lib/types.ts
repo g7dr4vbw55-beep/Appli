@@ -20,3 +20,11 @@ export interface Commentaire {
   auteur_prenom: string
   contenu: string
 }
+
+export interface CommentaireVideo {
+  id: string
+  created_at: string
+  video_id: string
+  auteur_prenom: string
+  contenu: string
+}
