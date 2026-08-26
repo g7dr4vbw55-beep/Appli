@@ -206,10 +206,24 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
         </div>
       )}
 
+      {/* Les commentaires des vidéos passent avant la grille des photos : ils
+          sont la partie vivante du site, et se trouvaient auparavant sous
+          plusieurs centaines de vignettes, donc introuvables. */}
+      <CommentairesVideos motDePasse={motDePasse} />
+
+      <div className="mx-auto max-w-2xl px-4 pb-1 pt-8">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-mauve-500">
+          Photos de la soirée
+        </h2>
+        <p className="mt-1 text-sm leading-relaxed text-mauve-400">
+          Touchez une photo pour lire ses commentaires et les supprimer si besoin.
+        </p>
+      </div>
+
       {/* Deux zones tactiles distinctes et généreuses : une croix de 28 px
           superposée à la photo était trop petite au doigt, et un appui à côté
           ouvrait la photo au lieu de la supprimer. */}
-      <div className="mx-auto grid max-w-2xl grid-cols-2 gap-3 px-4 sm:grid-cols-3">
+      <div className="mx-auto mt-3 grid max-w-2xl grid-cols-2 gap-3 px-4 sm:grid-cols-3">
         {photos.map((photo) => (
           <div key={photo.id} className="overflow-hidden rounded-xl bg-prune-800">
             <button
@@ -250,8 +264,6 @@ function PanneauAdmin({ motDePasse, onDeconnexion }: { motDePasse: string; onDec
           </button>
         )}
       </div>
-
-      <CommentairesVideos motDePasse={motDePasse} />
 
       {photoOuverte && (
         <PanneauCommentaires
