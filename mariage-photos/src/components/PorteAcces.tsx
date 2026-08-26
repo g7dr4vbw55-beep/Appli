@@ -2,20 +2,29 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import weddingConfig from '../../wedding.config'
 import { enregistrerAccesValide, enregistrerPrenom, getAccesValide, getPrenomEnregistre } from '../lib/localPrefs'
 
-const CODE_ACCES_ATTENDU = import.meta.env.VITE_ACCESS_CODE
+const CODE_ACCES_ATTENDU = (import.meta.env.VITE_ACCESS_CODE ?? '').trim()
+
+/**
+ * Laisser VITE_ACCESS_CODE vide supprime complètement l'étape du code.
+ * L'écran n'est alors même plus affiché : demander un code inexistant, puis
+ * accepter n'importe quelle saisie, ne ferait qu'égarer les invités.
+ */
+const CODE_REQUIS = CODE_ACCES_ATTENDU.length > 0
 
 interface Props {
   children: (prenom: string) => ReactNode
 }
 
 export default function PorteAcces({ children }: Props) {
-  const [accesValide, setAccesValide] = useState(getAccesValide)
+  const [accesValide, setAccesValide] = useState(() => !CODE_REQUIS || getAccesValide())
   const [prenom, setPrenom] = useState(getPrenomEnregistre)
 
   if (!accesValide) {
     return <EcranCodeAcces onValide={() => setAccesValide(true)} />
   }
 
+  // Le prénom est demandé dans tous les cas, code d'accès ou non : il signe
+  // les commentaires des vidéos.
   if (!prenom) {
     return <EcranPrenom onValide={(p) => setPrenom(p)} />
   }
@@ -29,13 +38,7 @@ function EcranCodeAcces({ onValide }: { onValide: () => void }) {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!CODE_ACCES_ATTENDU) {
-      // Aucun code n'a été configuré côté serveur : on n'imagine pas de valeur, on laisse passer
-      enregistrerAccesValide()
-      onValide()
-      return
-    }
-    if (saisie.trim().toLowerCase() === CODE_ACCES_ATTENDU.trim().toLowerCase()) {
+    if (saisie.trim().toLowerCase() === CODE_ACCES_ATTENDU.toLowerCase()) {
       enregistrerAccesValide()
       onValide()
     } else {
