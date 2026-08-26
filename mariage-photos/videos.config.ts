@@ -42,16 +42,17 @@ export interface Video {
 
 const videos: Video[] = [
   {
-    id: 'ceremonie',
-    titre: 'La cérémonie',
-    description: 'Les moments forts de la journée, de la mairie au vin d\'honneur.',
+    id: 'recapitulatif',
+    titre: 'Le film de la journée',
+    description:
+      'Le récapitulatif complet du mariage, en photos et en vidéo, du matin jusqu\'au bout de la nuit.',
     plateforme: 'youtube',
     source: '',
   },
   {
-    id: 'soiree',
-    titre: 'La soirée',
-    description: 'Les discours, l\'ouverture du bal et la piste jusqu\'au bout de la nuit.',
+    id: 'lunettes',
+    titre: 'Les lunettes M & S',
+    description: 'La compilation de toutes vos photos avec les lunettes personnalisées.',
     plateforme: 'youtube',
     source: '',
   },
